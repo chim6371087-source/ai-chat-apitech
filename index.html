@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI API TECH T0.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Sarabun:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #ff6a00;
+  --orange2: #ff9f45;
+  --orange-glow: rgba(255,106,0,0.3);
+  --dark: #080808;
+  --dark2: #111111;
+  --card: #141414;
+  --card2: #1c1c1c;
+  --border: rgba(255,106,0,0.2);
+  --border-bright: rgba(255,106,0,0.6);
+  --text: #f0f0f0;
+  --text-dim: #888;
+  --text-dimmer: #444;
+  --green: #00ff88;
+  --font-head: 'Rajdhani', sans-serif;
+  --font-body: 'Sarabun', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--dark);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+
+/* ── BACKGROUND ── */
+#bg-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+}
+
+.grid-overlay {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,106,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,106,0,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.vignette {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
+  pointer-events: none;
+}
+
+/* ── LAYOUT ── */
+#app {
+  position: relative; z-index: 1;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* ── HEADER ── */
+header {
+  background: rgba(8,8,8,0.95);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(20px);
+  position: relative;
+}
+
+header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--orange), transparent);
+  animation: scanline 4s ease-in-out infinite;
+}
+
+@keyframes scanline {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-img {
+  height: 44px;
+  width: auto;
+  filter: drop-shadow(0 0 8px var(--orange));
+}
+
+.header-title {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--text);
+}
+
+.header-title span {
+  color: var(--orange);
+}
+
+.status-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--green);
+  background: rgba(0,255,136,0.08);
+  border: 1px solid rgba(0,255,136,0.25);
+  padding: 3px 8px;
+  border-radius: 3px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--green); }
+  50% { opacity: 0.4; box-shadow: none; }
+}
+
+.header-right {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 34px; height: 34px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: var(--orange-glow);
+}
+
+/* ── CHAT AREA ── */
+#chat {
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  scroll-behavior: smooth;
+}
+
+#chat::-webkit-scrollbar { width: 4px; }
+#chat::-webkit-scrollbar-track { background: transparent; }
+#chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+#chat::-webkit-scrollbar-thumb:hover { background: var(--orange); }
+
+/* ── WELCOME ── */
+#welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  animation: fadeUp 0.6s ease both;
+}
+
+.welcome-logo-wrap {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.welcome-logo {
+  height: 100px;
+  filter: drop-shadow(0 0 20px var(--orange));
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.welcome-ring {
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  animation: spin 8s linear infinite;
+}
+
+.welcome-ring::before {
+  content: '';
+  position: absolute;
+  top: -2px; left: 50%;
+  width: 4px; height: 4px;
+  background: var(--orange);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--orange);
+  transform: translateX(-50%);
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.welcome-title {
+  font-family: var(--font-head);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  margin-bottom: 8px;
+}
+
+.welcome-title span { color: var(--orange); }
+
+.welcome-sub {
+  font-size: 14px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  margin-bottom: 32px;
+}
+
+/* ── QUICK BUTTONS ── */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.quick-btn {
+  background: var(--card);
+  border: 1px solid rgba(255,106,0,0.4);
+  color: #e8e8e8;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.3px;
+  text-shadow: 0 0 12px rgba(255,255,255,0.15);
+}
+
+.quick-btn:hover {
+  border-color: var(--orange);
+  color: #ffffff;
+  background: rgba(255,106,0,0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(255,106,0,0.2);
+  text-shadow: 0 0 16px rgba(255,200,100,0.4);
+}
+
+.quick-btn .qicon {
+  font-size: 18px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(255,106,0,0.5));
+}
+
+/* ── MESSAGES ── */
+.msg-wrap {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  animation: fadeUp 0.3s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg-wrap.user { align-items: flex-end; }
+.msg-wrap.bot  { align-items: flex-start; }
+
+.msg-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dimmer);
+  margin-bottom: 5px;
+  letter-spacing: 0.5px;
+  padding: 0 4px;
+}
+
+.msg-wrap.user .msg-meta { color: rgba(255,106,0,0.4); }
+
+.message {
+  max-width: 72%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg-wrap.user .message {
+  background: linear-gradient(135deg, var(--orange), #ff4500);
+  color: #000;
+  font-weight: 500;
+  border-bottom-right-radius: 3px;
+  box-shadow: 0 4px 20px rgba(255,106,0,0.25);
+}
+
+.msg-wrap.bot .message {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: #e0e0e0;
+}
+
+.msg-wrap.bot .message::before {
+  content: '> ';
+  color: var(--orange);
+  font-weight: bold;
+}
+
+/* ── LOADING ── */
+.loading-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.loading-bubble {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  border-bottom-left-radius: 3px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.loading-dot {
+  width: 6px; height: 6px;
+  background: var(--orange);
+  border-radius: 50%;
+  animation: blink 1.2s ease-in-out infinite;
+}
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* ── INPUT AREA ── */
+.input-area {
+  background: rgba(8,8,8,0.95);
+  border-top: 1px solid var(--border);
+  padding: 14px 20px;
+  backdrop-filter: blur(20px);
+  position: relative;
+}
+
+.input-area::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--orange), transparent);
+  opacity: 0.4;
+}
+
+.input-inner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 6px 6px 16px;
+  transition: border-color 0.2s;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.input-inner:focus-within {
+  border-color: var(--border-bright);
+  box-shadow: 0 0 0 3px rgba(255,106,0,0.08);
+}
+
+.input-prefix {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--orange);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+#messageInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  caret-color: var(--orange);
+}
+
+#messageInput::placeholder { color: var(--text-dimmer); }
+
+.send-btn {
+  background: var(--orange);
+  border: none;
+  color: #000;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 2px;
+  padding: 9px 20px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.send-btn:hover {
+  background: var(--orange2);
+  box-shadow: 0 0 16px rgba(255,106,0,0.4);
+  transform: translateY(-1px);
+}
+
+.send-btn:active { transform: translateY(0); }
+
+/* ── HUD DECORATIONS ── */
+.corner-tl, .corner-tr, .corner-bl, .corner-br {
+  position: fixed;
+  width: 20px; height: 20px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.corner-tl { top: 68px; left: 4px; border-top: 1px solid var(--orange); border-left: 1px solid var(--orange); }
+.corner-tr { top: 68px; right: 4px; border-top: 1px solid var(--orange); border-right: 1px solid var(--orange); }
+.corner-bl { bottom: 72px; left: 4px; border-bottom: 1px solid var(--orange); border-left: 1px solid var(--orange); }
+.corner-br { bottom: 72px; right: 4px; border-bottom: 1px solid var(--orange); border-right: 1px solid var(--orange); }
+
+/* ── COPY BUTTON ── */
+.copy-btn {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dimmer);
+  background: transparent;
+  border: 1px solid var(--text-dimmer);
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.copy-btn:hover { color: var(--orange); border-color: var(--orange); }
+
+/* ── CHAR COUNTER ── */
+.char-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dimmer);
+  flex-shrink: 0;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ── HISTORY PANEL ── */
+.history-btn {
+  width: 34px; height: 34px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+  position: relative;
+}
+.history-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
+.history-badge {
+  position: absolute; top: -4px; right: -4px;
+  width: 14px; height: 14px;
+  background: var(--orange); border-radius: 50%;
+  font-size: 9px; font-family: var(--font-mono);
+  color: #000; display: flex; align-items: center; justify-content: center;
+  font-weight: bold;
+}
+.history-panel {
+  position: absolute; top: 70px; right: 15px; z-index: 500;
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 10px; width: 320px; max-height: 360px;
+  overflow-y: auto; display: none; animation: fadeUp 0.2s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.history-panel.open { display: block; }
+.history-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+  letter-spacing: 1px;
+}
+.history-clear {
+  background: none; border: none; color: var(--text-dimmer);
+  cursor: pointer; font-size: 10px; font-family: var(--font-mono);
+  transition: color 0.2s;
+}
+.history-clear:hover { color: var(--orange); }
+.history-item {
+  padding: 9px 14px; cursor: pointer;
+  border-bottom: 1px solid rgba(255,106,0,0.06);
+  font-family: var(--font-body); font-size: 13px; color: var(--text-dim);
+  transition: all 0.15s; display: flex; align-items: center; gap: 8px;
+}
+.history-item:hover { background: rgba(255,106,0,0.07); color: var(--text); }
+.history-item span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-time { font-family: var(--font-mono); font-size: 9px; color: var(--text-dimmer); flex-shrink: 0; }
+.history-empty { padding: 20px; text-align: center; color: var(--text-dimmer);
+  font-family: var(--font-mono); font-size: 11px; }
+
+/* ── UNIT CONVERTER ── */
+.unit-btn {
+  width: 34px; height: 34px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.unit-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
+.unit-panel {
+  position: absolute; top: 70px; right: 58px; z-index: 500;
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 10px; width: 300px;
+  display: none; animation: fadeUp 0.2s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.unit-panel.open { display: block; }
+.unit-panel-header {
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+  letter-spacing: 1px;
+}
+.unit-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+.unit-tab {
+  flex: 1; padding: 7px 4px; text-align: center;
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-dim);
+  cursor: pointer; border: none; background: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s; letter-spacing: 0.5px;
+}
+.unit-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+.unit-content { padding: 12px 14px; }
+.unit-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.unit-input {
+  flex: 1; background: var(--card); border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px 10px; color: var(--text);
+  font-family: var(--font-mono); font-size: 12px;
+  outline: none; transition: border-color 0.2s;
+}
+.unit-input:focus { border-color: var(--border-bright); }
+.unit-label {
+  font-family: var(--font-mono); font-size: 10px; color: var(--orange);
+  min-width: 36px; text-align: right;
+}
+.unit-result {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; margin-top: 6px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--text);
+  line-height: 1.8;
+}
+.unit-result span { color: var(--orange); }
+
+/* ── CARD-STYLE BOT MESSAGE ── */
+.bot-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 3px;
+  border-radius: 10px;
+  max-width: 82%;
+  overflow: hidden;
+  animation: fadeUp 0.3s ease both;
+}
+.bot-card-header {
+  background: rgba(255,106,0,0.1);
+  border-bottom: 1px solid var(--border);
+  padding: 7px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.bot-card-title {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--orange); letter-spacing: 1px;
+}
+.bot-card-body { padding: 0; }
+.card-section {
+  border-bottom: 1px solid rgba(255,106,0,0.08);
+  padding: 8px 14px;
+}
+.card-section:last-child { border-bottom: none; }
+.card-section-label {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--text-dimmer); letter-spacing: 1px;
+  margin-bottom: 4px; text-transform: uppercase;
+}
+.card-kv { display: flex; flex-direction: column; gap: 3px; }
+.card-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: var(--font-mono); font-size: 12px;
+}
+.card-key { color: var(--text-dim); }
+.card-val { color: var(--text); font-weight: 500; }
+.card-val.highlight { color: var(--orange); font-size: 14px; }
+.card-plain {
+  font-family: var(--font-mono); font-size: 12px;
+  color: #e0e0e0; line-height: 1.7; white-space: pre-wrap;
+}
+.card-actions {
+  padding: 6px 14px 8px;
+  display: flex; gap: 6px;
+}
+
+/* ── VOICE INPUT ── */
+.voice-btn {
+  width: 34px; height: 34px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.voice-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
+.voice-btn.listening {
+  border-color: #ff3333;
+  color: #ff3333;
+  background: rgba(255,51,51,0.12);
+  animation: pulse-red 1s ease-in-out infinite;
+}
+@keyframes pulse-red {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,51,51,0.4); }
+  50%      { box-shadow: 0 0 0 6px rgba(255,51,51,0); }
+}
+.voice-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #ff3333;
+  letter-spacing: 1px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  display: none;
+}
+.voice-status.active { display: inline; animation: blink-text 1s ease-in-out infinite; }
+@keyframes blink-text { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── SHARE BUTTON on card ── */
+.share-btn {
+  display: inline-block;
+  margin-top: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dimmer);
+  background: transparent;
+  border: 1px solid var(--text-dimmer);
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.share-btn:hover { color: #00cc66; border-color: #00cc66; }
+
+/* ── SHARE TOAST ── */
+.share-toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: #00cc66; color: #000;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  padding: 8px 20px; border-radius: 20px;
+  letter-spacing: 1px; z-index: 9999;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.share-toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="grid-overlay"></div>
+<div class="vignette"></div>
+
+<!-- HUD corners -->
+<div class="corner-tl"></div>
+<div class="corner-tr"></div>
+<div class="corner-bl"></div>
+<div class="corner-br"></div>
+
+<div id="app">
+  <header>
+    <div class="header-left">
+      <img src="1.png" class="logo-img" alt="logo" onerror="this.style.display='none'">
+      <div>
+        <div class="header-title">AI API<span> TECH</span> T0.1</div>
+      </div>
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        ONLINE
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="unit-btn" onclick="toggleUnit()" title="แปลงหน่วย">⚖</button>
+      <button class="history-btn" onclick="toggleHistory()" title="ประวัติ" id="historyBtn">
+        🕐<span class="history-badge" id="histBadge" style="display:none">0</span>
+      </button>
+      <button class="icon-btn" onclick="clearChat()" title="ล้างแชท">🧹</button>
+    </div>
+
+  <!-- History Panel -->
+  <div class="history-panel" id="historyPanel">
+    <div class="history-header">
+      <span>HISTORY</span>
+      <button class="history-clear" onclick="clearHistory()">ล้างทั้งหมด</button>
+    </div>
+    <div id="historyList"><div class="history-empty">ยังไม่มีประวัติ</div></div>
+  </div>
+
+  <!-- Unit Converter Panel -->
+  <div class="unit-panel" id="unitPanel">
+    <div class="unit-panel-header">UNIT CONVERTER</div>
+    <div class="unit-tabs">
+      <button class="unit-tab active" onclick="setUnitTab('pressure',this)">แรงดัน</button>
+      <button class="unit-tab" onclick="setUnitTab('torque',this)">แรงบิด</button>
+      <button class="unit-tab" onclick="setUnitTab('length',this)">ความยาว</button>
+      <button class="unit-tab" onclick="setUnitTab('speed',this)">ความเร็ว</button>
+    </div>
+    <div class="unit-content" id="unitContent"></div>
+  </div>
+  </header>
+
+  <div id="chat">
+    <div id="welcome">
+      <div class="welcome-logo-wrap">
+        <img src="logo1.png" class="welcome-logo" alt="logo" onerror="this.style.display='none'">
+        <div class="welcome-ring"></div>
+      </div>
+      <div class="welcome-title">AI API <span>TECH</span> T0.1</div>
+      <div class="welcome-sub">ระบบวิเคราะห์และคำนวณเครื่องยนต์อัจฉริยะ</div>
+      <div class="quick-grid">
+        <!-- ── ของเดิม ── -->
+        <button class="quick-btn" onclick="quickAsk('รหัสความผิดปกติHonda(ฮอนด้า) รหัส 1-1 / รหัส P0301')">
+          <span class="qicon">🔍</span>รหัสความผิดปกติ OBD / ECU
+        </button>
+        <button class="quick-btn" onclick="quickAsk('(bore  stroke ชัก  CC ใส่ 3 ค่า) ')">
+          <span class="qicon">⚙️</span>คำนวณ CC / ลูกสูบ / ระยะชัก
+        </button>
+        <button class="quick-btn" onclick="quickAsk('(afr 14.7 airflow 300)   (afr 13 airflow 280)   (อัตราส่วนอากาศ 12.5 ปริมาณอากาศ 250)   (ส่วนผสมอากาศ 14 airflow 320)')">
+          <span class="qicon">💨</span>อัตราส่วนอากาศต่อเชื้อเพลิง (AFR)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('(150cc chamber 14)   (170cc chamber 15)   (155 ซีซี ห้องเผาไหม้ 13)   (200cc chamber 16.5)')">
+          <span class="qicon">🔩</span>อัตราส่วนกำลังอัดสถิต (Static CR)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('(stroke 55 rpm 9000)   (150cc rpm 8500)   (150cc stroke 55 rpm 9000)')">
+          <span class="qicon">📊</span>ความเร็วลูกสูบเฉลี่ย + ปริมาณอากาศ
+        </button>
+        <button class="quick-btn" onclick="quickAsk('(cr 11)  (cr 12 k 9)  (pressure 1200)  (แรงดัน 1100)')">
+          <span class="qicon">💥</span>แรงดันตอนอัด / แรงดันตอนระเบิด
+        </button>
+        <button class="quick-btn" onclick="quickAsk('cr 12 ivc 60 stroke 55 rod 100')">
+          <span class="qicon">🔬</span>กำลังอัดพลวัต (Dynamic CR)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('ตรวจสอบท่อน้ำมันเชื้อเพลิง ที่ระยะเท่าไหร่ Yamaha XMAX 300 / เปลี่ยนไส้กรองอากาศรอง ที่ระยะเท่าไหร่ Yamaha XMAX 300')">
+          <span class="qicon">📋</span>ตารางเช็คระยะ / บำรุงรักษา
+        </button>
+        <!-- ── ของใหม่ ── -->
+        <button class="quick-btn" onclick="quickAsk('actual 280 theoretical 320')">
+          <span class="qicon">🌬️</span>ประสิทธิภาพการหายใจ (VE%)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('injector hp 50 cyl 1')">
+          <span class="qicon">💉</span>คำนวณขนาดหัวฉีด (Injector Sizing)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('จาก 150cc เป็น 200cc jet 118')">
+          <span class="qicon">🔧</span>คำนวณเมนเจ็ตคาร์บูเรเตอร์
+        </button>
+        <button class="quick-btn" onclick="quickAsk('cr 12 timing 30')">
+          <span class="qicon">⚡</span>องศาจุดระเบิด (Ignition Timing)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('throttle hp 50')">
+          <span class="qicon">🎛️</span>ขนาดลิ้นเร่ง (Throttle Body Size)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('150cc cr 12 rpm 10000')">
+          <span class="qicon">🏍️</span>ประเมินแรงม้า / แรงบิด (HP / Torque)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('exhaust 150cc rpm 9000')">
+          <span class="qicon">🔴</span>ขนาดท่อไอเสีย (Exhaust Header)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('ท่อไอดี rpm 8000')">
+          <span class="qicon">🟢</span>ความยาวท่อไอดี (Intake Runner)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('intake 104 exhaust 108')">
+          <span class="qicon">🔁</span>มุมแยกแคมชาฟต์ (Valve Timing LSA)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('coolant hp 30')">
+          <span class="qicon">🌡️</span>ระบบหล่อเย็น (Coolant Flow Rate)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('น้ำมันเครื่อง cr 13 rpm 11000')">
+          <span class="qicon">🛢️</span>เลือกเกรดน้ำมันเครื่อง (Oil Viscosity)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('150cc cr 12 rpm 10000')">
+          <span class="qicon">🔥</span>ความร้อนที่ลูกสูบรับ (Piston Heat Load)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('knock cr 12')">
+          <span class="qicon">⚠️</span>ความเสี่ยงน็อค (Detonation Risk)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('rod 105 stroke 55')">
+          <span class="qicon">📏</span>อัตราส่วนก้านสูบ (Rod Ratio)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('cr 13 ron 91')">
+          <span class="qicon">⛽</span>ค่าออกเทนที่ต้องการ (Octane Requirement)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('valve spring rpm 10000 lift 9')">
+          <span class="qicon">🔄</span>ความแข็งสปริงวาล์ว (Valve Spring Rate)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('hp 45 kg 130')">
+          <span class="qicon">⚖️</span>อัตราส่วนกำลังต่อน้ำหนัก (Power/Weight)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('front 14 rear 42 rpm 9000')">
+          <span class="qicon">🔗</span>อัตราทดเกียร์ / สเปรกโซ่ (Gear Ratio)
+        </button>
+        <!-- ── ช่วงล่าง ── -->
+        <button class="quick-btn" onclick="quickAsk('spring weight 70 sag 30')">
+          <span class="qicon">🌀</span>ความแข็งโช้คอัพ (Spring Rate)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('free sag 10 race sag 30')">
+          <span class="qicon">📐</span>ตั้งค่าระยะยุบโช้ค (Sag Setup)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('rake 24')">
+          <span class="qicon">↗️</span>มุมคอแกน / ระยะเลื่อน (Rake &amp; Trail)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('swingarm 420')">
+          <span class="qicon">📏</span>ความยาวสวิงอาร์ม (Swingarm)
+        </button>
+        <!-- ── เบรก ── -->
+        <button class="quick-btn" onclick="quickAsk('brake bias weight 130')">
+          <span class="qicon">🛑</span>สัดส่วนแรงเบรก (Brake Bias)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('disc 280')">
+          <span class="qicon">⭕</span>ขนาดจานเบรก (Brake Disc Size)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('speed 100 mu 0.7')">
+          <span class="qicon">🚦</span>ระยะเบรกหยุด (Braking Distance)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('master 14 caliper 32')">
+          <span class="qicon">🔩</span>ขนาดลูกสูบคาลิปเปอร์ (Caliper)
+        </button>
+        <!-- ── ไฟฟ้า ── -->
+        <button class="quick-btn" onclick="quickAsk('volt 14.2')">
+          <span class="qicon">⚡</span>วิเคราะห์แรงดันชาร์จ (Charging Voltage)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('stator watt 80')">
+          <span class="qicon">🔋</span>กำลังไฟ Stator Output
+        </button>
+        <button class="quick-btn" onclick="quickAsk('fuse watt 55')">
+          <span class="qicon">🔌</span>ขนาดฟิวส์ (Fuse Rating)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('cca 150')">
+          <span class="qicon">🔆</span>ความสามารถสตาร์ทเย็น (Battery CCA)
+        </button>
+        <!-- ── ยางและล้อ ── -->
+        <button class="quick-btn" onclick="quickAsk('load index 62')">
+          <span class="qicon">🏋</span>ดัชนีรับน้ำหนักยาง (Load Index)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('110/70 r17')">
+          <span class="qicon">⬤</span>เส้นรอบวงยาง (Rolling Circumference)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('orig 110/70 r17 new 120/70 r17')">
+          <span class="qicon">🔢</span>ความคลาดเคลื่อนมาตรวัด (Speedo Error)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('tire pressure weight 150 rider 70')">
+          <span class="qicon">💨</span>แรงดันลมยางตามน้ำหนัก (Tire Pressure)
+        </button>
+        <button class="quick-btn" onclick="quickAsk('rim 3.5')">
+          <span class="qicon">🔘</span>ความกว้างวงล้อที่รองรับ (Rim Width)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-inner">
+      <span class="input-prefix">»</span>
+      <input
+        type="text"
+        id="messageInput"
+        placeholder="พิมพ์คำถามหรือค่าที่ต้องการคำนวณ..."
+        onkeypress="if(event.key==='Enter')sendMessage()"
+        oninput="updateCharCount(this)"
+        maxlength="500"
+        autocomplete="off"
+      >
+      <span class="voice-status" id="voiceStatus">REC</span>
+      <span class="char-count" id="charCount">0</span>
+      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="พูดค่าเลย">🎙</button>
+      <button class="send-btn" onclick="sendMessage()">SEND</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── HEX BACKGROUND ── */
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+});
+
+const opts = {
+  len: 18, count: 40, baseTime: 12, addedTime: 12,
+  dieChance: .04, spawnChance: 1, sparkChance: .1, sparkDist: 10,
+  color: 'hsl(hue,100%,light%)', baseLight: 50, addedLight: 10,
+  shadowToTimePropMult: 6, baseLightInputMultiplier: .01,
+  addedLightInputMultiplier: .02, cx: W/2, cy: H/2,
+  repaintAlpha: .05, hueChange: .05
+};
+
+let tick = 0;
+const lines = [];
+const dieX = W/2/opts.len;
+const dieY = H/2/opts.len;
+const baseRad = Math.PI*2/6;
+
+ctx.fillStyle = 'black';
+ctx.fillRect(0,0,W,H);
+
+class Line {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = 0; this.y = 0; this.addedX = 0; this.addedY = 0; this.rad = 0;
+    this.lightInputMultiplier = opts.baseLightInputMultiplier + opts.addedLightInputMultiplier * Math.random();
+    this.color = opts.color.replace('hue', tick * opts.hueChange);
+    this.cumulativeTime = 0;
+    this.beginPhase();
+  }
+  beginPhase() {
+    this.x += this.addedX; this.y += this.addedY;
+    this.time = 0;
+    this.targetTime = (opts.baseTime + opts.addedTime * Math.random()) | 0;
+    this.rad += baseRad * (Math.random() < .5 ? 1 : -1);
+    this.addedX = Math.cos(this.rad); this.addedY = Math.sin(this.rad);
+    if (Math.random() < opts.dieChance || this.x > dieX || this.x < -dieX || this.y > dieY || this.y < -dieY)
+      this.reset();
+  }
+  step() {
+    ++this.time; ++this.cumulativeTime;
+    if (this.time >= this.targetTime) this.beginPhase();
+    const prop = this.time / this.targetTime;
+    const wave = Math.sin(prop * Math.PI / 2);
+    const x = this.addedX * wave, y = this.addedY * wave;
+    ctx.shadowBlur = prop * opts.shadowToTimePropMult;
+    ctx.fillStyle = ctx.shadowColor = this.color.replace(
+      'light', opts.baseLight + opts.addedLight * Math.sin(this.cumulativeTime * this.lightInputMultiplier)
+    );
+    ctx.fillRect(opts.cx + (this.x + x) * opts.len, opts.cy + (this.y + y) * opts.len, 2, 2);
+  }
+}
+
+function loop() {
+  requestAnimationFrame(loop);
+  ++tick;
+  opts.cx = W/2; opts.cy = H/2;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(0,0,0,' + opts.repaintAlpha + ')';
+  ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation = 'lighter';
+  if (lines.length < opts.count && Math.random() < opts.spawnChance) lines.push(new Line());
+  lines.forEach(l => l.step());
+}
+loop();
+
+/* ── CHAT SYSTEM ── */
+const webhookURL = "https://a7ivalc0.rpcld.com/webhook/lineoa";
+const chat = document.getElementById('chat');
+const input = document.getElementById('messageInput');
+let msgCount = 0;
+let lastUserMsg = '';
+
+function updateCharCount(el) {
+  document.getElementById('charCount').textContent = el.value.length;
+}
+
+function getTime() {
+  return new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function clearChat() {
+  chat.innerHTML = '';
+  location.reload();
+}
+
+function quickAsk(text) {
+  input.value = text;
+  updateCharCount(input);
+  sendMessage();
+}
+
+function removeWelcome() {
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
+}
+
+/* ── HISTORY ── */
+const HISTORY_KEY = 'apitech_history';
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+}
+function saveToHistory(msg) {
+  let h = loadHistory();
+  h = h.filter(x => x.text !== msg);
+  h.unshift({ text: msg, time: getTime() });
+  if (h.length > 20) h = h.slice(0, 20);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+  renderHistory();
+}
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const badge = document.getElementById('histBadge');
+  const h = loadHistory();
+  badge.textContent = h.length;
+  badge.style.display = h.length ? 'flex' : 'none';
+  if (!h.length) { list.innerHTML = '<div class="history-empty">ยังไม่มีประวัติ</div>'; return; }
+  list.innerHTML = h.map((x,i) => `
+    <div class="history-item" onclick="reuseHistory('${x.text.replace(/'/g,"\'")}')">
+      <span>${x.text}</span>
+      <span class="history-time">${x.time}</span>
+    </div>`).join('');
+}
+function reuseHistory(text) {
+  input.value = text;
+  updateCharCount(input);
+  toggleHistory();
+  sendMessage();
+}
+function clearHistory() {
+  localStorage.removeItem(HISTORY_KEY);
+  renderHistory();
+}
+function toggleHistory() {
+  const p = document.getElementById('historyPanel');
+  const u = document.getElementById('unitPanel');
+  u.classList.remove('open');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) renderHistory();
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.history-panel') && !e.target.closest('.history-btn'))
+    document.getElementById('historyPanel').classList.remove('open');
+  if (!e.target.closest('.unit-panel') && !e.target.closest('.unit-btn'))
+    document.getElementById('unitPanel').classList.remove('open');
+});
+
+/* ── UNIT CONVERTER ── */
+const unitDefs = {
+  pressure: {
+    label: 'แรงดัน',
+    inputs: [
+      { id:'up_kpa', label:'kPa', toBase: v=>v, fromBase: v=>v },
+      { id:'up_bar', label:'bar', toBase: v=>v*100, fromBase: v=>v/100 },
+      { id:'up_psi', label:'psi', toBase: v=>v/0.145038, fromBase: v=>v*0.145038 },
+      { id:'up_atm', label:'atm', toBase: v=>v*101.325, fromBase: v=>v/101.325 },
+    ]
+  },
+  torque: {
+    label: 'แรงบิด',
+    inputs: [
+      { id:'ut_nm',   label:'Nm',     toBase: v=>v, fromBase: v=>v },
+      { id:'ut_kgf',  label:'kgf·m',  toBase: v=>v*9.80665, fromBase: v=>v/9.80665 },
+      { id:'ut_ftlb', label:'ft·lb',  toBase: v=>v*1.35582, fromBase: v=>v/1.35582 },
+      { id:'ut_inlb', label:'in·lb',  toBase: v=>v*0.11298, fromBase: v=>v/0.11298 },
+    ]
+  },
+  length: {
+    label: 'ความยาว',
+    inputs: [
+      { id:'ul_mm',   label:'mm',   toBase: v=>v, fromBase: v=>v },
+      { id:'ul_cm',   label:'cm',   toBase: v=>v*10, fromBase: v=>v/10 },
+      { id:'ul_inch', label:'inch', toBase: v=>v*25.4, fromBase: v=>v/25.4 },
+      { id:'ul_m',    label:'m',    toBase: v=>v*1000, fromBase: v=>v/1000 },
+    ]
+  },
+  speed: {
+    label: 'ความเร็ว',
+    inputs: [
+      { id:'us_kmh', label:'km/h', toBase: v=>v, fromBase: v=>v },
+      { id:'us_mph', label:'mph',  toBase: v=>v*1.60934, fromBase: v=>v/1.60934 },
+      { id:'us_ms',  label:'m/s',  toBase: v=>v*3.6, fromBase: v=>v/3.6 },
+      { id:'us_knot',label:'knot', toBase: v=>v*1.852, fromBase: v=>v/1.852 },
+    ]
+  }
+};
+let currentUnitTab = 'pressure';
+function setUnitTab(tab, el) {
+  currentUnitTab = tab;
+  document.querySelectorAll('.unit-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderUnitContent();
+}
+function renderUnitContent() {
+  const def = unitDefs[currentUnitTab];
+  const c = document.getElementById('unitContent');
+  c.innerHTML = def.inputs.map(inp => `
+    <div class="unit-row">
+      <input class="unit-input" id="${inp.id}" type="number" placeholder="0"
+        oninput="convertUnit('${inp.id}','${currentUnitTab}')">
+      <span class="unit-label">${inp.label}</span>
+    </div>`).join('') + '<div class="unit-result" id="unitResult" style="display:none"></div>';
+}
+function convertUnit(sourceId, tab) {
+  const def = unitDefs[tab];
+  const srcDef = def.inputs.find(x => x.id === sourceId);
+  const val = parseFloat(document.getElementById(sourceId).value);
+  if (isNaN(val)) { document.getElementById('unitResult').style.display='none'; return; }
+  const base = srcDef.toBase(val);
+  const results = def.inputs
+    .filter(x => x.id !== sourceId)
+    .map(x => `<span style="color:var(--text-dim)">${x.label}</span> = <span>${x.fromBase(base).toFixed(4)}</span>`)
+    .join('<br>');
+  const r = document.getElementById('unitResult');
+  r.style.display = 'block';
+  r.innerHTML = results;
+  def.inputs.filter(x => x.id !== sourceId).forEach(x => {
+    document.getElementById(x.id).value = '';
+  });
+}
+function toggleUnit() {
+  const p = document.getElementById('unitPanel');
+  const h = document.getElementById('historyPanel');
+  h.classList.remove('open');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) renderUnitContent();
+}
+
+/* ── CARD MESSAGE RENDERER ── */
+function parseToCard(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 3) return null;
+  const sections = [];
+  let current = null;
+  const isKV = l => /^[\w\s()/%°]+\s*=\s*.+/.test(l) || /^[\w\s()/%°]+\s*≈\s*.+/.test(l);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (isKV(trimmed)) {
+      if (!current || current.type !== 'kv') {
+        current = { type: 'kv', items: [] };
+        sections.push(current);
+      }
+      const sep = trimmed.includes('≈') ? '≈' : '=';
+      const idx = trimmed.indexOf(sep);
+      current.items.push({ key: trimmed.slice(0, idx).trim(), val: trimmed.slice(idx+1).trim(), sep });
+    } else {
+      current = { type: 'text', text: trimmed };
+      sections.push(current);
+      current = null;
+    }
+  }
+  return sections.length >= 2 ? sections : null;
+}
+
+function buildCard(text, timeStr, question) {
+  const sections = parseToCard(text);
+  const card = document.createElement('div');
+  card.className = 'msg-wrap bot';
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.textContent = `AI APITECH · ${timeStr}`;
+  card.appendChild(meta);
+
+  if (!sections) {
+    const wrap = document.createElement('div');
+    wrap.className = 'bot-card';
+    const header = document.createElement('div');
+    header.className = 'bot-card-header';
+    header.innerHTML = '<span class="bot-card-title">AI APITECH</span>';
+    const body = document.createElement('div');
+    body.className = 'bot-card-body';
+    const sec = document.createElement('div');
+    sec.className = 'card-section';
+    const p = document.createElement('div');
+    p.className = 'card-plain';
+    p.textContent = text;
+    sec.appendChild(p);
+    body.appendChild(sec);
+    wrap.appendChild(header);
+    wrap.appendChild(body);
+    card.appendChild(wrap);
+    addCardActions(card, wrap, text, question);
+    return card;
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'bot-card';
+
+  // Title = first text section
+  const titleSec = sections.find(s => s.type === 'text');
+  const header = document.createElement('div');
+  header.className = 'bot-card-header';
+  header.innerHTML = `<span class="bot-card-title">${titleSec ? titleSec.text.toUpperCase() : 'AI APITECH'}</span>`;
+  wrap.appendChild(header);
+
+  const body = document.createElement('div');
+  body.className = 'bot-card-body';
+
+  let isFirst = true;
+  for (const sec of sections) {
+    if (sec.type === 'text' && isFirst) { isFirst = false; continue; }
+    const div = document.createElement('div');
+    div.className = 'card-section';
+    if (sec.type === 'kv') {
+      const kv = document.createElement('div');
+      kv.className = 'card-kv';
+      sec.items.forEach((item, i) => {
+        const row = document.createElement('div');
+        row.className = 'card-row';
+        const isResult = item.sep === '≈' || i === sec.items.length - 1;
+        row.innerHTML = `<span class="card-key">${item.key}</span><span class="card-val${isResult ? ' highlight' : ''}">${item.sep} ${item.val}</span>`;
+        kv.appendChild(row);
+      });
+      div.appendChild(kv);
+    } else {
+      const p = document.createElement('div');
+      p.className = 'card-plain';
+      p.textContent = sec.text;
+      div.appendChild(p);
+    }
+    body.appendChild(div);
+    isFirst = false;
+  }
+
+  wrap.appendChild(body);
+  card.appendChild(wrap);
+  addCardActions(card, wrap, text, question);
+  return card;
+}
+
+function addCardActions(card, wrap, text, question) {
+  const actions = document.createElement('div');
+  actions.className = 'card-actions';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.textContent = 'COPY';
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(text);
+    copyBtn.textContent = 'COPIED ✓';
+    setTimeout(() => copyBtn.textContent = 'COPY', 2000);
+  };
+
+  const shareBtn = document.createElement('button');
+  shareBtn.className = 'share-btn';
+  shareBtn.textContent = 'SHARE';
+  shareBtn.onclick = () => shareResult(text, question || '');
+
+  actions.appendChild(copyBtn);
+  actions.appendChild(shareBtn);
+  wrap.appendChild(actions);
+}
+
+function addMessage(text, sender) {
+  removeWelcome();
+  msgCount++;
+
+  if (sender === 'user') { lastUserMsg = text;
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-wrap user';
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.textContent = `YOU · ${getTime()}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'message';
+    bubble.textContent = text;
+    wrap.appendChild(meta);
+    wrap.appendChild(bubble);
+    chat.appendChild(wrap);
+  } else {
+    const card = buildCard(text, getTime(), lastUserMsg);
+    chat.appendChild(card);
+  }
+
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addLoading() {
+  removeWelcome();
+  const wrap = document.createElement('div');
+  wrap.className = 'loading-wrap';
+  wrap.id = 'loading';
+  wrap.innerHTML = `
+    <div class="loading-bubble">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>`;
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeLoading() {
+  const el = document.getElementById('loading');
+  if (el) el.remove();
+}
+
+async function sendMessage() {
+  const message = input.value.trim();
+  if (!message) return;
+
+  addMessage(message, 'user');
+  saveToHistory(message);
+  input.value = '';
+  updateCharCount(input);
+  addLoading();
+
+  try {
+    const res = await fetch(webhookURL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    const data = await res.json();
+    removeLoading();
+    addMessage(data.reply ? data.reply.trim() : 'ไม่มีคำตอบจาก AI', 'bot');
+  } catch (e) {
+    removeLoading();
+    addMessage('ไม่สามารถเชื่อมต่อกับ AI Server ได้\nกรุณาตรวจสอบการเชื่อมต่อและลองใหม่', 'bot');
+  }
+}
+
+/* ── VOICE INPUT ── */
+let recognition = null;
+let isListening = false;
+
+function initRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+  const r = new SpeechRecognition();
+  r.lang = 'th-TH';
+  r.continuous = false;
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+
+  r.onstart = () => {
+    isListening = true;
+    document.getElementById('voiceBtn').classList.add('listening');
+    document.getElementById('voiceStatus').classList.add('active');
+    input.placeholder = 'กำลังฟัง...';
+  };
+
+  r.onresult = (e) => {
+    const transcript = Array.from(e.results)
+      .map(r => r[0].transcript).join('');
+    input.value = transcript;
+    updateCharCount(input);
+  };
+
+  r.onend = () => {
+    isListening = false;
+    document.getElementById('voiceBtn').classList.remove('listening');
+    document.getElementById('voiceStatus').classList.remove('active');
+    input.placeholder = 'พิมพ์คำถามหรือค่าที่ต้องการคำนวณ...';
+    if (input.value.trim()) sendMessage();
+  };
+
+  r.onerror = (e) => {
+    isListening = false;
+    document.getElementById('voiceBtn').classList.remove('listening');
+    document.getElementById('voiceStatus').classList.remove('active');
+    input.placeholder = 'พิมพ์คำถามหรือค่าที่ต้องการคำนวณ...';
+    if (e.error === 'not-allowed') {
+      alert('กรุณาอนุญาตการใช้ไมโครโฟนในเบราว์เซอร์ก่อนครับ');
+    }
+  };
+
+  return r;
+}
+
+function toggleVoice() {
+  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+    alert('เบราว์เซอร์นี้ไม่รองรับ Voice Input\nกรุณาใช้ Chrome หรือ Edge ครับ');
+    return;
+  }
+  if (isListening) {
+    recognition && recognition.stop();
+    return;
+  }
+  recognition = initRecognition();
+  if (recognition) recognition.start();
+}
+
+/* ── SHARE RESULT ── */
+function shareResult(text, question) {
+  const shareText = `🔧 AI API TECH T0.1\n\n📌 คำถาม: ${question}\n\n📊 ผลลัพธ์:\n${text}`;
+  navigator.clipboard.writeText(shareText).then(() => {
+    const toast = document.getElementById('shareToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+</script>
+<div class="share-toast" id="shareToast">COPIED TO CLIPBOARD</div>
+</body>
+</html>
