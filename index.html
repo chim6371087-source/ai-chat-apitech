@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
 <title>AI API TECH T0.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Sarabun:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -40,6 +40,7 @@ html, body {
 #bg-canvas {
   position: fixed; inset: 0; z-index: 0;
   pointer-events: none;
+  width: 100% !important; height: 100% !important;
 }
 
 .grid-overlay {
@@ -76,6 +77,8 @@ header {
   justify-content: space-between;
   backdrop-filter: blur(20px);
   position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 header::after {
@@ -728,6 +731,129 @@ header::after {
   transition: opacity 0.3s;
 }
 .share-toast.show { opacity: 1; }
+
+/* ════════════════════════════════════════════════
+   MOBILE RESPONSIVE — รองรับทุกขนาดจอ
+   ════════════════════════════════════════════════ */
+
+/* ── ป้องกันล้นออกด้านขวา ── */
+* { max-width: 100%; }
+img, video, canvas { max-width: 100%; height: auto; }
+
+/* ── Header mobile ── */
+@media (max-width: 600px) {
+  header {
+    padding: 0 12px;
+    height: 54px;
+  }
+  .logo-img { height: 32px; }
+  .header-title { font-size: 16px; letter-spacing: 1px; }
+  .status-badge { display: none; }
+  .header-left { gap: 8px; }
+  .header-right { gap: 6px; }
+
+  /* ปุ่ม header เล็กลง */
+  .icon-btn, .unit-btn, .history-btn {
+    width: 30px; height: 30px;
+    font-size: 12px;
+  }
+
+  /* HUD corners ปรับตาม header ใหม่ */
+  .corner-tl, .corner-tr { top: 58px; }
+  .corner-bl, .corner-br { bottom: 62px; }
+}
+
+/* ── Chat area ── */
+@media (max-width: 600px) {
+  #chat { padding: 12px; }
+
+  /* Message bubble */
+  .message { max-width: 90%; font-size: 13px; padding: 10px 12px; }
+  .bot-card { max-width: 95%; }
+  .card-row { font-size: 11px; }
+  .card-plain { font-size: 11px; }
+}
+
+/* ── Quick buttons grid ── */
+@media (max-width: 600px) {
+  .quick-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .quick-btn {
+    padding: 10px 10px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  .quick-btn .qicon { font-size: 15px; }
+  #welcome { padding: 20px 10px; }
+  .welcome-title { font-size: 22px; letter-spacing: 2px; }
+  .welcome-logo { height: 70px; }
+  .welcome-sub { font-size: 12px; margin-bottom: 20px; }
+}
+
+/* ── Input area ── */
+@media (max-width: 600px) {
+  .input-area { padding: 10px 12px; }
+  .input-inner { padding: 5px 5px 5px 12px; gap: 6px; }
+  #messageInput { font-size: 13px; }
+  .send-btn { padding: 8px 14px; font-size: 11px; letter-spacing: 1px; }
+  .voice-btn { width: 30px; height: 30px; font-size: 13px; }
+  .char-count { min-width: 22px; font-size: 9px; }
+}
+
+/* ── Panels (History / Unit) ── */
+@media (max-width: 600px) {
+  .history-panel {
+    position: fixed;
+    top: 58px; right: 0; left: 0;
+    width: 100%;
+    max-height: 55vh;
+    border-radius: 0 0 12px 12px;
+    z-index: 1000;
+  }
+  .unit-panel {
+    position: fixed;
+    top: 58px; right: 0; left: 0;
+    width: 100%;
+    border-radius: 0 0 12px 12px;
+    z-index: 1000;
+  }
+  .unit-tab { font-size: 9px; padding: 6px 2px; }
+  .unit-input { font-size: 11px; padding: 6px 8px; }
+}
+
+/* ── Tablet (601–900px) ── */
+@media (min-width: 601px) and (max-width: 900px) {
+  .quick-grid { grid-template-columns: repeat(3, 1fr); }
+  .quick-btn { font-size: 13px; padding: 10px 12px; }
+  .message { max-width: 82%; }
+  .bot-card { max-width: 88%; }
+  header { padding: 0 16px; }
+}
+
+/* ── ป้องกัน iOS bounce และ overflow ── */
+#app { overflow: hidden; }
+#chat { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+body { overscroll-behavior: none; }
+
+/* ── Safe area สำหรับ iPhone notch/home bar ── */
+.input-area {
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+}
+header {
+  padding-left: max(24px, env(safe-area-inset-left));
+  padding-right: max(24px, env(safe-area-inset-right));
+}
+
+/* ── Touch targets — ขนาดขั้นต่ำ 44px ตาม Apple HIG ── */
+@media (hover: none) and (pointer: coarse) {
+  .quick-btn { min-height: 44px; }
+  .send-btn, .voice-btn, .icon-btn, .unit-btn, .history-btn {
+    min-height: 40px; min-width: 40px;
+  }
+  .history-item { min-height: 44px; }
+}
 </style>
 </head>
 <body>
@@ -797,8 +923,8 @@ header::after {
         <button class="quick-btn" onclick="quickAsk('รหัสความผิดปกติHonda(ฮอนด้า) รหัส 1-1 / รหัส P0301')">
           <span class="qicon">🔍</span>รหัสความผิดปกติ OBD / ECU
         </button>
-        <button class="quick-btn" onclick="quickAsk('(bore  stroke ชัก  CC ใส่ 3 ค่า) ')">
-          <span class="qicon">⚙️</span>คำนวณ CC / ลูกสูบ / ระยะชัก
+        <button class="quick-btn" onclick="quickAsk('(bore 60 stroke 55)   (170cc bore 62)   (170cc stroke 55)   (ลูกสูบ 60 กระบอก 55)   (150 ซีซี ลูก 58)   (bore 60 stroke 55 ชัก 5)   (170cc bore 60 stroke 52)')">
+          <span class="qicon">⚙️</span>คำนวณ CC / รูลูกสูบ / ระยะชัก
         </button>
         <button class="quick-btn" onclick="quickAsk('(afr 14.7 airflow 300)   (afr 13 airflow 280)   (อัตราส่วนอากาศ 12.5 ปริมาณอากาศ 250)   (ส่วนผสมอากาศ 14 airflow 320)')">
           <span class="qicon">💨</span>อัตราส่วนอากาศต่อเชื้อเพลิง (AFR)
