@@ -1,29 +1,48 @@
 <!DOCTYPE html>
+<!-- ============================================================
+  AI API TECH T0.1 — Motorcycle Calculator Chatbot
+  ไฟล์นี้คือหน้าเว็บแชทบอทสำหรับคำนวณสูตรรถมอเตอร์ไซค์
+  ทำงานโดยส่งคำถามไปที่ n8n webhook แล้วรับผลลัพธ์กลับมาแสดง
+  ============================================================ -->
 <html lang="th">
 <head>
+<!-- UTF-8 รองรับภาษาไทยและอักขระพิเศษทุกตัว -->
 <meta charset="UTF-8">
+<!-- viewport: บอก browser ให้ใช้ความกว้างจริงของหน้าจอ
+  - width=device-width   : ไม่ zoom out ให้เห็นหน้าจอเต็ม
+  - initial-scale=1.0    : zoom level เริ่มต้น = 1:1
+  - viewport-fit=cover   : ขยายถึงขอบจอ iPhone notch/Dynamic Island
+  - maximum-scale=1.0    : ป้องกัน iOS zoom เมื่อ tap input -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
 <title>AI API TECH T0.1</title>
+<!-- preconnect: เชื่อมต่อ Google Fonts ล่วงหน้าเพื่อโหลดเร็วขึ้น -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- โหลด font 3 ตัว:
+  - Rajdhani      : font หัวข้อ สไตล์ HUD / military (ตัวอักษรอังกฤษ)
+  - Sarabun       : font body ภาษาไทย อ่านง่ายบนจอ
+  - Share Tech Mono: font monospace สำหรับโค้ด/ผลลัพธ์การคำนวณ -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Sarabun:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
+/* ── CSS CUSTOM PROPERTIES (ตัวแปรสี/font ทั้งหมด) ──────────────
+  ใช้ :root เพื่อให้เรียกใช้ได้ทุกที่ด้วย var(--ชื่อ)
+  แก้สีทั้งเว็บได้จากที่เดียวนี้เลย ──────────────────────────── */
 :root {
-  --orange: #ff6a00;
-  --orange2: #ff9f45;
-  --orange-glow: rgba(255,106,0,0.3);
-  --dark: #080808;
-  --dark2: #111111;
-  --card: #141414;
-  --card2: #1c1c1c;
-  --border: rgba(255,106,0,0.2);
-  --border-bright: rgba(255,106,0,0.6);
-  --text: #f0f0f0;
-  --text-dim: #888;
-  --text-dimmer: #444;
-  --green: #00ff88;
-  --font-head: 'Rajdhani', sans-serif;
-  --font-body: 'Sarabun', sans-serif;
-  --font-mono: 'Share Tech Mono', monospace;
+  --orange: #ff6a00;     /* สีหลัก: ส้มสด ใช้ highlight/ปุ่ม */
+  --orange2: #ff9f45;    /* สีส้มอ่อน: hover state ของปุ่ม */
+  --orange-glow: rgba(255,106,0,0.3); /* สีส้มโปร่งแสง: พื้นหลัง hover */
+  --dark: #080808;       /* สีดำพื้นหลังหลัก เกือบดำสนิท */
+  --dark2: #111111;      /* สีดำรอง: เล็กน้อยกว่า --dark */
+  --card: #141414;       /* พื้นหลัง card/bubble ของ bot */
+  --card2: #1c1c1c;      /* พื้นหลัง input box / panel */
+  --border: rgba(255,106,0,0.2);       /* เส้นขอบปกติ: ส้มจาง */
+  --border-bright: rgba(255,106,0,0.6); /* เส้นขอบ focus: ส้มเข้ม */
+  --text: #f0f0f0;       /* สีข้อความหลัก: ขาวครีม */
+  --text-dim: #888;      /* สีข้อความรอง: เทาปานกลาง */
+  --text-dimmer: #444;   /* สีข้อความจาง: timestamp / label */
+  --green: #00ff88;      /* สีเขียว: ONLINE badge */
+  --font-head: 'Rajdhani', sans-serif;  /* font หัวข้อ / ปุ่ม SEND */
+  --font-body: 'Sarabun', sans-serif;   /* font body ภาษาไทยทั่วไป */
+  --font-mono: 'Share Tech Mono', monospace; /* font monospace: ผลลัพธ์คำนวณ */
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,13 +55,18 @@ html, body {
   overflow: hidden;
 }
 
-/* ── BACKGROUND ── */
+/* ── BACKGROUND: Canvas animation เส้น hex เคลื่อนไหว ────────────
+  canvas วาดภาพ animation พื้นหลังด้วย JavaScript (class Line)
+  เป็น hex grid pattern สีส้มเคลื่อนไหว สร้าง atmosphere ── */
 #bg-canvas {
   position: fixed; inset: 0; z-index: 0;
   pointer-events: none;
   width: 100% !important; height: 100% !important;
 }
 
+/* ── grid เส้นตาราง overlay ทับบน canvas animation
+  ใช้ CSS gradient สร้างเส้นตาราง 40x40px สีส้มจาง
+  ให้ดูเหมือนจอ HUD/cockpit ── */
 .grid-overlay {
   position: fixed; inset: 0; z-index: 0;
   background-image:
@@ -52,13 +76,21 @@ html, body {
   pointer-events: none;
 }
 
+/* ── vignette: เงามืดรอบขอบจอ ────────────────────────────────
+  radial-gradient ทำให้กลางจอสว่าง ขอบมืด
+  ช่วยให้ content กลางหน้าโดดเด่นและดูมีความลึก ── */
 .vignette {
   position: fixed; inset: 0; z-index: 0;
   background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
   pointer-events: none;
 }
 
-/* ── LAYOUT ── */
+/* ── LAYOUT: โครงสร้างหลักของหน้า ─────────────────────────────
+  ใช้ CSS Grid แบ่งเป็น 3 แถว:
+    auto  = header (ความสูงตามเนื้อหา)
+    1fr   = chat area (กินพื้นที่ที่เหลือทั้งหมด)
+    auto  = input area (ความสูงตามเนื้อหา)
+  height: 100vh ทำให้เต็มหน้าจอพอดี ── */
 #app {
   position: relative; z-index: 1;
   height: 100vh;
@@ -66,7 +98,11 @@ html, body {
   grid-template-rows: auto 1fr auto;
 }
 
-/* ── HEADER ── */
+/* ── HEADER: แถบด้านบน ──────────────────────────────────────
+  - backdrop-filter: blur = เบลอพื้นหลังที่ส่องผ่านมา (glassmorphism)
+  - position: relative = ให้ ::after (เส้นส่องแสง) อ้างอิงตำแหน่งจาก header
+  - overflow: hidden = ป้องกัน content ล้นออกไป (mobile fix)
+  - flex-shrink: 0 = ไม่ให้ header หดตัวเมื่อหน้าจอเล็ก ── */
 header {
   background: rgba(8,8,8,0.95);
   border-bottom: 1px solid var(--border);
@@ -81,6 +117,9 @@ header {
   flex-shrink: 0;
 }
 
+/* ── เส้นแสงส้มที่ขอบล่าง header ─────────────────────────────
+  ::after สร้าง pseudo-element เป็นเส้นแสง gradient
+  animation scanline ทำให้กะพริบช้าๆ เหมือนสัญญาณ ── */
 header::after {
   content: '';
   position: absolute;
@@ -119,6 +158,9 @@ header::after {
   color: var(--orange);
 }
 
+/* ── ONLINE badge: แสดงสถานะระบบ ──────────────────────────────
+  แสดงข้อความ "ONLINE" พร้อมจุดเขียวกะพริบ
+  ซ่อนบนมือถือ (max-width: 600px) เพราะพื้นที่จำกัด ── */
 .status-badge {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -150,6 +192,9 @@ header::after {
   gap: 8px;
 }
 
+/* ── icon buttons: ปุ่มรูปไอคอนใน header ────────────────────
+  ปุ่มสี่เหลี่ยมขนาด 34x34px ใส่ได้ emoji หรือ icon
+  ใช้สำหรับ: ล้างแชท (🧹) ── */
 .icon-btn {
   width: 34px; height: 34px;
   background: transparent;
@@ -168,7 +213,11 @@ header::after {
   background: var(--orange-glow);
 }
 
-/* ── CHAT AREA ── */
+/* ── CHAT AREA: พื้นที่แสดงบทสนทนา ────────────────────────────
+  overflow-y: auto = เลื่อนขึ้น-ลงได้ เมื่อ message มากกว่าพื้นที่
+  scroll-behavior: smooth = เลื่อนลงแบบ smooth animation
+  -webkit-overflow-scrolling: touch = เลื่อนบน iOS ลื่นมือ (inertia)
+  overscroll-behavior: contain = ป้องกันการ scroll ถ่ายทอดไปหน้าอื่น ── */
 #chat {
   overflow-y: auto;
   padding: 24px;
@@ -183,7 +232,10 @@ header::after {
 #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 #chat::-webkit-scrollbar-thumb:hover { background: var(--orange); }
 
-/* ── WELCOME ── */
+/* ── WELCOME SCREEN: หน้าต้อนรับก่อนเริ่มแชท ─────────────────
+  แสดงตอนยังไม่มีข้อความ — ซ่อนเมื่อเริ่มแชท (removeWelcome())
+  flex: 1 ทำให้กินพื้นที่เต็ม chat area
+  animation fadeUp: ค่อยๆ ปรากฏขึ้นมา ── */
 #welcome {
   flex: 1;
   display: flex;
@@ -211,6 +263,9 @@ header::after {
   50% { transform: translateY(-8px); }
 }
 
+/* ── วงแหวนหมุนรอบ logo ─────────────────────────────────────
+  วงกลม border ที่หมุนรอบ logo ด้วย animation spin 8 วินาที
+  ::before สร้างจุดส้มเล็กที่ขอบบนของวงแหวน (เหมือน satellite) ── */
 .welcome-ring {
   position: absolute;
   inset: -16px;
@@ -249,7 +304,10 @@ header::after {
   margin-bottom: 32px;
 }
 
-/* ── QUICK BUTTONS ── */
+/* ── QUICK BUTTONS: ปุ่มลัดหน้าแรก ────────────────────────────
+  CSS Grid: auto-fit + minmax(200px, 1fr)
+  = จัดคอลัมน์อัตโนมัติ แต่ละช่องกว้างอย่างน้อย 200px
+  บนมือถือ override เป็น 2 คอลัมน์ fix width ── */
 .quick-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -258,6 +316,9 @@ header::after {
   max-width: 800px;
 }
 
+/* ── quick button แต่ละปุ่ม ──────────────────────────────────
+  text-shadow บน hover ทำให้ตัวอักษรดู glow
+  transform: translateY(-2px) ทำให้ปุ่มยก "ลอยขึ้น" เมื่อ hover ── */
 .quick-btn {
   background: var(--card);
   border: 1px solid rgba(255,106,0,0.4);
@@ -320,6 +381,10 @@ header::after {
 
 .msg-wrap.user .msg-meta { color: rgba(255,106,0,0.4); }
 
+/* ── message bubble: กล่องข้อความ ─────────────────────────────
+  max-width: 72% = ไม่กว้างเต็มหน้า เหมือน chat app ทั่วไป
+  white-space: pre-wrap = รักษาบรรทัดใหม่และช่องว่างจาก API
+  word-break: break-word = ตัดคำที่ยาวเกินออกอัตโนมัติ ── */
 .message {
   max-width: 72%;
   padding: 12px 16px;
@@ -353,7 +418,9 @@ header::after {
   font-weight: bold;
 }
 
-/* ── LOADING ── */
+/* ── LOADING INDICATOR: จุดกะพริบขณะรอ AI ─────────────────────
+  แสดงขณะ fetch ข้อมูลจาก webhook — ซ่อนเมื่อได้รับผลลัพธ์
+  3 จุดกะพริบสลับกัน ด้วย animation-delay 0.2s ต่อจุด ── */
 .loading-wrap {
   display: flex;
   align-items: flex-start;
@@ -386,7 +453,9 @@ header::after {
   40% { opacity: 1; transform: scale(1); }
 }
 
-/* ── INPUT AREA ── */
+/* ── INPUT AREA: พื้นที่พิมพ์ข้อความด้านล่าง ──────────────────
+  padding-bottom ใช้ env(safe-area-inset-bottom) รองรับ iPhone home bar
+  (ส่วนที่เป็น gesture bar ด้านล่าง iPhone X ขึ้นไป) ── */
 .input-area {
   background: rgba(8,8,8,0.95);
   border-top: 1px solid var(--border);
@@ -404,6 +473,10 @@ header::after {
   opacity: 0.4;
 }
 
+/* ── กล่อง input รวม prefix + input + ปุ่มต่างๆ ───────────────
+  flex container แนวนอน ประกอบด้วย:
+  » (prefix) | input text | char count | voice btn | SEND btn
+  focus-within: เมื่อ child element ใด focus จะเปลี่ยน border ── */
 .input-inner {
   display: flex;
   gap: 10px;
@@ -466,7 +539,10 @@ header::after {
 
 .send-btn:active { transform: translateY(0); }
 
-/* ── HUD DECORATIONS ── */
+/* ── HUD CORNER DECORATIONS: เส้นมุมสี่มุม ─────────────────────
+  เส้น L-shape 4 มุมของ chat area เหมือน targeting reticle
+  pointer-events: none = คลิกผ่านได้ ไม่บล็อก content ด้านหลัง
+  ตำแหน่งปรับตาม header height (68px) และ input height (72px) ── */
 .corner-tl, .corner-tr, .corner-bl, .corner-br {
   position: fixed;
   width: 20px; height: 20px;
@@ -479,7 +555,9 @@ header::after {
 .corner-bl { bottom: 72px; left: 4px; border-bottom: 1px solid var(--orange); border-left: 1px solid var(--orange); }
 .corner-br { bottom: 72px; right: 4px; border-bottom: 1px solid var(--orange); border-right: 1px solid var(--orange); }
 
-/* ── COPY BUTTON ── */
+/* ── COPY BUTTON: ปุ่ม copy ผลลัพธ์ ──────────────────────────
+  ปุ่มเล็กๆ ใต้ card bot — click แล้ว copy text ไป clipboard
+  เปลี่ยนข้อความเป็น "COPIED ✓" ชั่วคราว 2 วินาที ── */
 .copy-btn {
   display: inline-block;
   margin-top: 6px;
@@ -505,7 +583,10 @@ header::after {
   text-align: right;
 }
 
-/* ── HISTORY PANEL ── */
+/* ── HISTORY PANEL: ประวัติการคำนวณ ────────────────────────────
+  เก็บ 20 คำถามล่าสุดใน localStorage ของเบราว์เซอร์
+  กดปุ่ม 🕐 เพื่อเปิด panel — กด item เพื่อส่งคำถามนั้นใหม่
+  badge (ตัวเลข) แสดงจำนวนประวัติที่เก็บไว้ ── */
 .history-btn {
   width: 34px; height: 34px;
   background: transparent;
@@ -560,7 +641,11 @@ header::after {
 .history-empty { padding: 20px; text-align: center; color: var(--text-dimmer);
   font-family: var(--font-mono); font-size: 11px; }
 
-/* ── UNIT CONVERTER ── */
+/* ── UNIT CONVERTER: แปลงหน่วย ─────────────────────────────────
+  กดปุ่ม ⚖ เปิด panel แปลงหน่วย 4 หมวด:
+  แรงดัน (kPa/bar/psi/atm), แรงบิด (Nm/kgf·m/ft·lb),
+  ความยาว (mm/cm/inch/m), ความเร็ว (km/h/mph/m/s/knot)
+  พิมพ์ค่าในช่องใดช่องหนึ่ง ผลลัพธ์ทุกหน่วยแสดงทันที ── */
 .unit-btn {
   width: 34px; height: 34px;
   background: transparent;
@@ -620,7 +705,11 @@ header::after {
 }
 .unit-result span { color: var(--orange); }
 
-/* ── CARD-STYLE BOT MESSAGE ── */
+/* ── CARD-STYLE BOT MESSAGE: แสดงผลแบบ card ────────────────────
+  แทนที่การแสดงผล pre-wrap แบบเดิม
+  parser จะวิเคราะห์ข้อความว่ามี key=value pattern ไหม
+  ถ้ามี → แสดงเป็น card sections พร้อม highlight ผลลัพธ์สุดท้าย
+  ถ้าไม่มี → แสดงเป็น plain text ใน card ── */
 .bot-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -668,7 +757,10 @@ header::after {
   display: flex; gap: 6px;
 }
 
-/* ── VOICE INPUT ── */
+/* ── VOICE INPUT: รับเสียงพูด ──────────────────────────────────
+  ใช้ Web Speech API (รองรับ Chrome/Edge เท่านั้น)
+  กดปุ่ม 🎙 เพื่อเริ่มฟัง — ปุ่มเปลี่ยนเป็นสีแดงกะพริบขณะฟัง
+  เมื่อพูดเสร็จ ส่งคำถามอัตโนมัติ (onend → sendMessage) ── */
 .voice-btn {
   width: 34px; height: 34px;
   background: transparent;
@@ -704,7 +796,10 @@ header::after {
 .voice-status.active { display: inline; animation: blink-text 1s ease-in-out infinite; }
 @keyframes blink-text { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* ── SHARE BUTTON on card ── */
+/* ── SHARE BUTTON: แชร์ผลลัพธ์ ─────────────────────────────────
+  ปุ่ม SHARE ใต้ทุก card — click แล้ว copy ข้อความรูปแบบ:
+  🔧 AI API TECH T0.1 / 📌 คำถาม: ... / 📊 ผลลัพธ์: ...
+  ไปที่ clipboard เพื่อแปะใน LINE หรือ Facebook ── */
 .share-btn {
   display: inline-block;
   margin-top: 0;
@@ -720,7 +815,9 @@ header::after {
 }
 .share-btn:hover { color: #00cc66; border-color: #00cc66; }
 
-/* ── SHARE TOAST ── */
+/* ── SHARE TOAST: แจ้งเตือน copy สำเร็จ ─────────────────────────
+  popup เล็กๆ ด้านล่างกลางหน้าจอ แสดง "COPIED TO CLIPBOARD"
+  ปรากฏ 2 วินาทีแล้วหายไป — ใช้ opacity transition (ไม่ใช่ display) ── */
 .share-toast {
   position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
   background: #00cc66; color: #000;
@@ -734,6 +831,11 @@ header::after {
 
 /* ════════════════════════════════════════════════
    MOBILE RESPONSIVE — รองรับทุกขนาดจอ
+   ────────────────────────────────────────────────
+   3 breakpoint:
+   ≤600px   : มือถือ (phone)
+   601-900px: แท็บเล็ต
+   >900px   : desktop (ใช้ style ปกติ ไม่มี override)
    ════════════════════════════════════════════════ */
 
 /* ── ป้องกันล้นออกด้านขวา ── */
@@ -837,7 +939,9 @@ img, video, canvas { max-width: 100%; height: auto; }
 #chat { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 body { overscroll-behavior: none; }
 
-/* ── Safe area สำหรับ iPhone notch/home bar ── */
+/* ── Safe area: รองรับ iPhone notch และ home bar ─────────────
+   env(safe-area-inset-*) = ค่าระยะห่างจาก hardware ของ iPhone
+   ทำให้ content ไม่ถูกบัง notch ซ้าย/ขวา หรือ home bar ล่าง ── */
 .input-area {
   padding-bottom: calc(14px + env(safe-area-inset-bottom));
 }
@@ -846,7 +950,10 @@ header {
   padding-right: max(24px, env(safe-area-inset-right));
 }
 
-/* ── Touch targets — ขนาดขั้นต่ำ 44px ตาม Apple HIG ── */
+/* ── Touch targets: ขนาดขั้นต่ำนิ้วสัมผัส ─────────────────────
+   Apple Human Interface Guideline แนะนำ minimum 44x44pt
+   (hover: none) and (pointer: coarse) = detect touchscreen
+   ป้องกันนิ้วกดพลาดปุ่มเล็กเกินไป ── */
 @media (hover: none) and (pointer: coarse) {
   .quick-btn { min-height: 44px; }
   .send-btn, .voice-btn, .icon-btn, .unit-btn, .history-btn {
@@ -858,16 +965,20 @@ header {
 </head>
 <body>
 
+<!-- Canvas element: JavaScript วาด hex animation พื้นหลังที่นี่ -->
 <canvas id="bg-canvas"></canvas>
+<!-- Grid overlay: เส้นตาราง CSS บน canvas -->
 <div class="grid-overlay"></div>
+<!-- Vignette: เงามืดรอบขอบจอ CSS gradient -->
 <div class="vignette"></div>
 
-<!-- HUD corners -->
+<!-- HUD Corners: เส้น L-shape 4 มุม ตกแต่ง ไม่มี interaction -->
 <div class="corner-tl"></div>
 <div class="corner-tr"></div>
 <div class="corner-bl"></div>
 <div class="corner-br"></div>
 
+<!-- #app: grid container หลัก (header | chat | input) -->
 <div id="app">
   <header>
     <div class="header-left">
@@ -888,7 +999,7 @@ header {
       <button class="icon-btn" onclick="clearChat()" title="ล้างแชท">🧹</button>
     </div>
 
-  <!-- History Panel -->
+  <!-- History Panel: dropdown แสดงประวัติ 20 รายการล่าสุด -->
   <div class="history-panel" id="historyPanel">
     <div class="history-header">
       <span>HISTORY</span>
@@ -897,7 +1008,7 @@ header {
     <div id="historyList"><div class="history-empty">ยังไม่มีประวัติ</div></div>
   </div>
 
-  <!-- Unit Converter Panel -->
+  <!-- Unit Converter Panel: dropdown แปลงหน่วย 4 หมวด -->
   <div class="unit-panel" id="unitPanel">
     <div class="unit-panel-header">UNIT CONVERTER</div>
     <div class="unit-tabs">
@@ -919,11 +1030,11 @@ header {
       <div class="welcome-title">AI API <span>TECH</span> T0.1</div>
       <div class="welcome-sub">ระบบวิเคราะห์และคำนวณเครื่องยนต์อัจฉริยะ</div>
       <div class="quick-grid">
-        <!-- ── ของเดิม ── -->
-        <button class="quick-btn" onclick="quickAsk('รหัสความผิดปกติHonda(ฮอนด้า) รหัส 1-1 / รหัส P0301')">
+        <!-- ── Quick Buttons กลุ่มที่ 1: เครื่องยนต์พื้นฐาน (8 ปุ่ม) ── -->
+        <button class="quick-btn" onclick="quickAsk('รหัสความผิดปกติHonda(ฮอนด้า) รหัส 1-2A: MAP:IAP sensor #1- High ,ตัวตรวจจับ MAP มีแรงเคลื่อนไฟฟ้าสูง / รหัส P0301')">
           <span class="qicon">🔍</span>รหัสความผิดปกติ OBD / ECU
         </button>
-        <button class="quick-btn" onclick="quickAsk('(bore  stroke cc ชัก ถาม 3 ค่าที่รู้ตอบ 1 ค่า)  ')">
+        <button class="quick-btn" onclick="quickAsk('(bore  stroke cc ชัก ใส่ 3 ค่าที่รู้ ตอบ 1 ค่า )')">
           <span class="qicon">⚙️</span>คำนวณ CC / รูลูกสูบ / ระยะชัก
         </button>
         <button class="quick-btn" onclick="quickAsk('(afr 14.7 airflow 300)   (afr 13 airflow 280)   (อัตราส่วนอากาศ 12.5 ปริมาณอากาศ 250)   (ส่วนผสมอากาศ 14 airflow 320)')">
@@ -944,15 +1055,15 @@ header {
         <button class="quick-btn" onclick="quickAsk('ตรวจสอบท่อน้ำมันเชื้อเพลิง ที่ระยะเท่าไหร่ Yamaha XMAX 300 / เปลี่ยนไส้กรองอากาศรอง ที่ระยะเท่าไหร่ Yamaha XMAX 300')">
           <span class="qicon">📋</span>ตารางเช็คระยะ / บำรุงรักษา
         </button>
-        <!-- ── ของใหม่ ── -->
+        <!-- ── Quick Buttons กลุ่มที่ 2: เชื้อเพลิง/กำลัง/วาล์ว/ท่อ (19 ปุ่ม) ── -->
         <button class="quick-btn" onclick="quickAsk('actual 280 theoretical 320')">
-          <span class="qicon">🌬️</span>ประสิทธิภาพการหายใจ (VE%)
+          <span class="qicon">🌬️</span>ประสิทธิภาพการอัดอากาศ (VE%)
         </button>
         <button class="quick-btn" onclick="quickAsk('injector hp 50 cyl 1')">
           <span class="qicon">💉</span>คำนวณขนาดหัวฉีด (Injector Sizing)
         </button>
         <button class="quick-btn" onclick="quickAsk('จาก 150cc เป็น 200cc jet 118')">
-          <span class="qicon">🔧</span>คำนวณเมนเจ็ตคาร์บูเรเตอร์
+          <span class="qicon">🔧</span>คำนวณเมนเจ็ตคาร์บูเรเตอร์(Carburetor Jet Size)
         </button>
         <button class="quick-btn" onclick="quickAsk('cr 12 timing 30')">
           <span class="qicon">⚡</span>องศาจุดระเบิด (Ignition Timing)
@@ -999,7 +1110,7 @@ header {
         <button class="quick-btn" onclick="quickAsk('front 14 rear 42 rpm 9000')">
           <span class="qicon">🔗</span>อัตราทดเกียร์ / สเปรกโซ่ (Gear Ratio)
         </button>
-        <!-- ── ช่วงล่าง ── -->
+        <!-- ── Quick Buttons กลุ่มที่ 3: ช่วงล่าง (4 ปุ่ม) ── -->
         <button class="quick-btn" onclick="quickAsk('spring weight 70 sag 30')">
           <span class="qicon">🌀</span>ความแข็งโช้คอัพ (Spring Rate)
         </button>
@@ -1012,7 +1123,7 @@ header {
         <button class="quick-btn" onclick="quickAsk('swingarm 420')">
           <span class="qicon">📏</span>ความยาวสวิงอาร์ม (Swingarm)
         </button>
-        <!-- ── เบรก ── -->
+        <!-- ── Quick Buttons กลุ่มที่ 4: เบรก (4 ปุ่ม) ── -->
         <button class="quick-btn" onclick="quickAsk('brake bias weight 130')">
           <span class="qicon">🛑</span>สัดส่วนแรงเบรก (Brake Bias)
         </button>
@@ -1025,7 +1136,7 @@ header {
         <button class="quick-btn" onclick="quickAsk('master 14 caliper 32')">
           <span class="qicon">🔩</span>ขนาดลูกสูบคาลิปเปอร์ (Caliper)
         </button>
-        <!-- ── ไฟฟ้า ── -->
+        <!-- ── Quick Buttons กลุ่มที่ 5: ไฟฟ้า (4 ปุ่ม) ── -->
         <button class="quick-btn" onclick="quickAsk('volt 14.2')">
           <span class="qicon">⚡</span>วิเคราะห์แรงดันชาร์จ (Charging Voltage)
         </button>
@@ -1038,7 +1149,7 @@ header {
         <button class="quick-btn" onclick="quickAsk('cca 150')">
           <span class="qicon">🔆</span>ความสามารถสตาร์ทเย็น (Battery CCA)
         </button>
-        <!-- ── ยางและล้อ ── -->
+        <!-- ── Quick Buttons กลุ่มที่ 6: ยางและล้อ (5 ปุ่ม) ── -->
         <button class="quick-btn" onclick="quickAsk('load index 62')">
           <span class="qicon">🏋</span>ดัชนีรับน้ำหนักยาง (Load Index)
         </button>
@@ -1079,24 +1190,45 @@ header {
 </div>
 
 <script>
-/* ── HEX BACKGROUND ── */
+/* ════════════════════════════════════════════════════════════
+   JAVASCRIPT — แบ่งเป็น 7 ส่วน:
+   1. HEX BACKGROUND    : animation พื้นหลัง canvas
+   2. CHAT SYSTEM       : ส่ง/รับ message + แสดงผล
+   3. HISTORY           : บันทึก/โหลดประวัติ localStorage
+   4. UNIT CONVERTER    : แปลงหน่วย
+   5. CARD RENDERER     : parse และแสดงผลแบบ card
+   6. VOICE INPUT       : รับเสียงด้วย Web Speech API
+   7. SHARE RESULT      : copy ผลลัพธ์ไป clipboard
+   ════════════════════════════════════════════════════════════ */
+
+/* ── 1. HEX BACKGROUND ──────────────────────────────────────────
+   วาด animation บน <canvas> ด้วย requestAnimationFrame
+   Line class: จุดแต่ละจุดเดินเป็น hex grid pattern
+   ctx.globalCompositeOperation='lighter' ทำให้สีบวกกัน (bloom effect) */
 const canvas = document.getElementById('bg-canvas');
 const ctx = canvas.getContext('2d');
 let W = canvas.width = window.innerWidth;
 let H = canvas.height = window.innerHeight;
+
+window.addEventListener('DOMContentLoaded', () => { try { renderHistory(); } catch(e) {} });
 
 window.addEventListener('resize', () => {
   W = canvas.width = window.innerWidth;
   H = canvas.height = window.innerHeight;
 });
 
+/* ── hex animation ชะลอลง ──
+   baseTime/addedTime สูงขึ้น = แต่ละเส้นเคลื่อนช้าลง
+   count ลดลง = เส้นน้อยลง จอไม่รกและประหยัด CPU
+   repaintAlpha ต่ำลง = รอยหางเส้นยาวขึ้น ดู smooth กว่า
+   hueChange ต่ำลง = สีเปลี่ยนช้าลง */
 const opts = {
-  len: 18, count: 40, baseTime: 12, addedTime: 12,
-  dieChance: .04, spawnChance: 1, sparkChance: .1, sparkDist: 10,
+  len: 18, count: 25, baseTime: 30, addedTime: 25,
+  dieChance: .03, spawnChance: .6, sparkChance: .05, sparkDist: 6,
   color: 'hsl(hue,100%,light%)', baseLight: 50, addedLight: 10,
-  shadowToTimePropMult: 6, baseLightInputMultiplier: .01,
-  addedLightInputMultiplier: .02, cx: W/2, cy: H/2,
-  repaintAlpha: .05, hueChange: .05
+  shadowToTimePropMult: 4, baseLightInputMultiplier: .008,
+  addedLightInputMultiplier: .015, cx: W/2, cy: H/2,
+  repaintAlpha: .03, hueChange: .02
 };
 
 let tick = 0;
@@ -1154,8 +1286,12 @@ function loop() {
 }
 loop();
 
-/* ── CHAT SYSTEM ── */
-const webhookURL = "https://a7ivalc0.rpcld.com/webhook/lineoa";
+/* ── 2. CHAT SYSTEM ────────────────────────────────────────────
+   webhookURL: endpoint n8n ที่รับคำถามและส่งคำตอบกลับ
+   sendMessage(): POST {message} ไป webhook → รับ {reply} กลับ
+   addMessage(): เพิ่ม message bubble ใน #chat
+   addLoading() / removeLoading(): แสดง/ซ่อน 3 จุดกะพริบ ── */
+const webhookURL = "https://a7ivalc0.rpcld.com/webhook/lineoa"; 
 const chat = document.getElementById('chat');
 const input = document.getElementById('messageInput');
 let msgCount = 0;
@@ -1185,31 +1321,58 @@ function removeWelcome() {
   if (w) w.remove();
 }
 
-/* ── HISTORY ── */
+/* ── 3. HISTORY ─────────────────────────────────────────────────
+   HISTORY_KEY: key สำหรับ localStorage
+   saveToHistory(): เพิ่ม message ใหม่ + dedup + จำกัด 20 รายการ
+   renderHistory(): วาด list ใน panel พร้อม badge จำนวน
+   reuseHistory(): กด item → ใส่ใน input → ส่งทันที ── */
 const HISTORY_KEY = 'apitech_history';
 function loadHistory() {
   try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
 }
 function saveToHistory(msg) {
-  let h = loadHistory();
-  h = h.filter(x => x.text !== msg);
-  h.unshift({ text: msg, time: getTime() });
-  if (h.length > 20) h = h.slice(0, 20);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+  try {
+    let h = loadHistory();
+    h = h.filter(x => x.text !== msg);
+    h.unshift({ text: msg, time: getTime() });
+    if (h.length > 20) h = h.slice(0, 20);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+  } catch(e) { console.warn('History save:', e); }
   renderHistory();
+}
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function renderHistory() {
   const list = document.getElementById('historyList');
   const badge = document.getElementById('histBadge');
+  if (!list || !badge) return;
   const h = loadHistory();
   badge.textContent = h.length;
   badge.style.display = h.length ? 'flex' : 'none';
-  if (!h.length) { list.innerHTML = '<div class="history-empty">ยังไม่มีประวัติ</div>'; return; }
-  list.innerHTML = h.map((x,i) => `
-    <div class="history-item" onclick="reuseHistory('${x.text.replace(/'/g,"\'")}')">
-      <span>${x.text}</span>
-      <span class="history-time">${x.time}</span>
-    </div>`).join('');
+  list.innerHTML = '';
+  if (!h.length) {
+    list.innerHTML = '<div class="history-empty">ยังไม่มีประวัติ</div>';
+    return;
+  }
+  h.forEach(x => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    const s1 = document.createElement('span');
+    s1.textContent = x.text;
+    const s2 = document.createElement('span');
+    s2.className = 'history-time';
+    s2.textContent = x.time;
+    item.appendChild(s1);
+    item.appendChild(s2);
+    item.addEventListener('click', () => {
+      input.value = x.text;
+      updateCharCount(input);
+      toggleHistory();
+      setTimeout(() => sendMessage(), 50);
+    });
+    list.appendChild(item);
+  });
 }
 function reuseHistory(text) {
   input.value = text;
@@ -1235,7 +1398,11 @@ document.addEventListener('click', e => {
     document.getElementById('unitPanel').classList.remove('open');
 });
 
-/* ── UNIT CONVERTER ── */
+/* ── 4. UNIT CONVERTER ──────────────────────────────────────────
+   unitDefs: object เก็บนิยามหน่วยทุกหมวด
+   toBase(): แปลงหน่วยนั้น → หน่วยฐาน (kPa / Nm / mm / km/h)
+   fromBase(): แปลงหน่วยฐาน → หน่วยนั้น
+   convertUnit(): อ่านค่า input → แปลงทุกหน่วย → แสดง ── */
 const unitDefs = {
   pressure: {
     label: 'แรงดัน',
@@ -1292,31 +1459,60 @@ function renderUnitContent() {
     </div>`).join('') + '<div class="unit-result" id="unitResult" style="display:none"></div>';
 }
 function convertUnit(sourceId, tab) {
-  const def = unitDefs[tab];
-  const srcDef = def.inputs.find(x => x.id === sourceId);
-  const val = parseFloat(document.getElementById(sourceId).value);
-  if (isNaN(val)) { document.getElementById('unitResult').style.display='none'; return; }
-  const base = srcDef.toBase(val);
-  const results = def.inputs
-    .filter(x => x.id !== sourceId)
-    .map(x => `<span style="color:var(--text-dim)">${x.label}</span> = <span>${x.fromBase(base).toFixed(4)}</span>`)
-    .join('<br>');
-  const r = document.getElementById('unitResult');
-  r.style.display = 'block';
-  r.innerHTML = results;
-  def.inputs.filter(x => x.id !== sourceId).forEach(x => {
-    document.getElementById(x.id).value = '';
-  });
+  try {
+    const def = unitDefs[tab];
+    const srcDef = def.inputs.find(x => x.id === sourceId);
+    const el = document.getElementById(sourceId);
+    if (!el) return;
+    const val = parseFloat(el.value);
+    const r = document.getElementById('unitResult');
+    if (!r) return;
+    if (isNaN(val) || el.value.trim() === '') {
+      r.style.display = 'none';
+      // ล้างค่าอื่น
+      def.inputs.filter(x => x.id !== sourceId)
+        .forEach(x => { const el2 = document.getElementById(x.id); if(el2) el2.value = ''; });
+      return;
+    }
+    const base = srcDef.toBase(val);
+    const rows = def.inputs
+      .filter(x => x.id !== sourceId)
+      .map(x => {
+        const converted = x.fromBase(base);
+        // แสดงทศนิยมน้อยลงถ้าเป็นจำนวนเต็ม
+        const display = Number.isInteger(converted) ? converted.toString() : converted.toFixed(4).replace(/\.?0+$/, '');
+        return `<div style="display:flex;justify-content:space-between;padding:2px 0">
+          <span style="color:var(--text-dim)">${x.label}</span>
+          <span style="color:var(--orange);font-weight:500">${display}</span>
+        </div>`;
+      }).join('');
+    r.style.display = 'block';
+    r.innerHTML = rows;
+    // ไม่ล้างค่า input อื่น ทำให้ใช้งานสับสน
+  } catch(e) { console.warn('Unit convert error', e); }
 }
 function toggleUnit() {
   const p = document.getElementById('unitPanel');
   const h = document.getElementById('historyPanel');
-  h.classList.remove('open');
-  p.classList.toggle('open');
-  if (p.classList.contains('open')) renderUnitContent();
+  if (!p) return;
+  h && h.classList.remove('open');
+  const isOpen = p.classList.toggle('open');
+  if (isOpen) {
+    renderUnitContent();
+    // focus input แรกเมื่อเปิด
+    setTimeout(() => {
+      const first = p.querySelector('.unit-input');
+      if (first) first.focus();
+    }, 100);
+  }
 }
 
-/* ── CARD MESSAGE RENDERER ── */
+/* ── 5. CARD MESSAGE RENDERER ───────────────────────────────────
+   parseToCard(): วิเคราะห์ข้อความว่ามี key=value / key≈value ไหม
+     → คืน sections array [{ type:'kv'|'text', items/text }]
+   buildCard(): สร้าง DOM element จาก sections
+     → header (ชื่อ calculator) + body (แถว key-val) + actions
+   addCardActions(): เพิ่มปุ่ม COPY และ SHARE ── */
 function parseToCard(text) {
   const lines = text.split('\n').filter(l => l.trim());
   if (lines.length < 3) return null;
@@ -1512,68 +1708,114 @@ async function sendMessage() {
   }
 }
 
-/* ── VOICE INPUT ── */
+/* ── 6. VOICE INPUT (แก้ใหม่: fix iOS + abort ก่อน start ใหม่) ── */
 let recognition = null;
 let isListening = false;
+let voiceTimeout = null;
 
-function initRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) return null;
-  const r = new SpeechRecognition();
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function setVoiceUI(active) {
+  const btn = document.getElementById('voiceBtn');
+  const status = document.getElementById('voiceStatus');
+  if (!btn || !status) return;
+  if (active) {
+    btn.classList.add('listening');
+    status.classList.add('active');
+    input.placeholder = '🎙 กำลังฟัง... (พูดได้เลย)';
+  } else {
+    btn.classList.remove('listening');
+    status.classList.remove('active');
+    input.placeholder = 'พิมพ์คำถามหรือค่าที่ต้องการคำนวณ...';
+  }
+}
+
+function stopVoice() {
+  isListening = false;
+  setVoiceUI(false);
+  clearTimeout(voiceTimeout);
+  if (recognition) {
+    try { recognition.abort(); } catch(e) {}
+    recognition = null;
+  }
+}
+
+function startVoice() {
+  if (!SpeechRecognitionAPI) {
+    alert('Voice Input ไม่รองรับในเบราว์เซอร์นี้\nกรุณาใช้ Chrome หรือ Edge บน Android/Desktop ครับ\n(Safari iOS ยังไม่รองรับ)');
+    return;
+  }
+
+  stopVoice(); // abort ก่อนถ้ามี recognition ค้างอยู่
+
+  const r = new SpeechRecognitionAPI();
   r.lang = 'th-TH';
   r.continuous = false;
   r.interimResults = true;
-  r.maxAlternatives = 1;
+  r.maxAlternatives = 3;
+  recognition = r;
 
   r.onstart = () => {
     isListening = true;
-    document.getElementById('voiceBtn').classList.add('listening');
-    document.getElementById('voiceStatus').classList.add('active');
-    input.placeholder = 'กำลังฟัง...';
+    setVoiceUI(true);
+    // auto-stop หลัง 10 วินาที ป้องกันค้าง
+    voiceTimeout = setTimeout(() => {
+      if (isListening) { stopVoice(); }
+    }, 10000);
   };
 
   r.onresult = (e) => {
-    const transcript = Array.from(e.results)
-      .map(r => r[0].transcript).join('');
-    input.value = transcript;
+    let interim = '';
+    let final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    input.value = final || interim;
     updateCharCount(input);
   };
 
   r.onend = () => {
-    isListening = false;
-    document.getElementById('voiceBtn').classList.remove('listening');
-    document.getElementById('voiceStatus').classList.remove('active');
-    input.placeholder = 'พิมพ์คำถามหรือค่าที่ต้องการคำนวณ...';
-    if (input.value.trim()) sendMessage();
-  };
-
-  r.onerror = (e) => {
-    isListening = false;
-    document.getElementById('voiceBtn').classList.remove('listening');
-    document.getElementById('voiceStatus').classList.remove('active');
-    input.placeholder = 'พิมพ์คำถามหรือค่าที่ต้องการคำนวณ...';
-    if (e.error === 'not-allowed') {
-      alert('กรุณาอนุญาตการใช้ไมโครโฟนในเบราว์เซอร์ก่อนครับ');
+    const txt = input.value.trim();
+    stopVoice();
+    if (txt) {
+      setTimeout(() => sendMessage(), 100);
     }
   };
 
-  return r;
+  r.onerror = (e) => {
+    stopVoice();
+    const msgs = {
+      'not-allowed': 'ไม่ได้รับอนุญาตใช้ไมโครโฟน\nกรุณากด Allow ในเบราว์เซอร์',
+      'no-speech':   'ไม่ได้ยินเสียง ลองพูดใกล้ไมค์อีกครั้ง',
+      'network':     'เชื่อมต่อ network ไม่ได้ ตรวจสอบอินเทอร์เน็ต',
+      'aborted':     '',
+    };
+    const msg = msgs[e.error];
+    if (msg) alert(msg);
+  };
+
+  try {
+    r.start();
+  } catch(e) {
+    stopVoice();
+    alert('เริ่ม Voice Input ไม่ได้: ' + e.message);
+  }
 }
 
 function toggleVoice() {
-  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
-    alert('เบราว์เซอร์นี้ไม่รองรับ Voice Input\nกรุณาใช้ Chrome หรือ Edge ครับ');
-    return;
-  }
   if (isListening) {
-    recognition && recognition.stop();
-    return;
+    stopVoice();
+  } else {
+    startVoice();
   }
-  recognition = initRecognition();
-  if (recognition) recognition.start();
 }
 
-/* ── SHARE RESULT ── */
+/* ── 7. SHARE RESULT ────────────────────────────────────────────
+   สร้างข้อความพร้อม emoji header / คำถาม / ผลลัพธ์
+   copy ไป clipboard ด้วย navigator.clipboard.writeText
+   แสดง toast "COPIED TO CLIPBOARD" 2 วินาที ── */
 function shareResult(text, question) {
   const shareText = `🔧 AI API TECH T0.1\n\n📌 คำถาม: ${question}\n\n📊 ผลลัพธ์:\n${text}`;
   navigator.clipboard.writeText(shareText).then(() => {
