@@ -76,7 +76,7 @@ header {
   justify-content: space-between;
   backdrop-filter: blur(20px);
   position: relative;
-  overflow: visible; /* FIX: ต้องเป็น visible ให้ panel dropdown ออกมาได้ */
+  overflow: visible; 
   flex-shrink: 0;
 }
 
@@ -120,7 +120,6 @@ header::after {
 
 .header-title span { color: var(--orange); }
 
-/* FIX: user-badge และ status-badge — ไม่ซ่อนอีกต่อไป แต่ scale ลงบน mobile */
 .user-badge {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -371,6 +370,8 @@ header::after {
   font-weight: 500;
   border-bottom-right-radius: 3px;
   box-shadow: 0 4px 20px rgba(255,106,0,0.25);
+  position: relative;
+  z-index: 2; /* ทำให้แชทไม่ไปทับ panel */
 }
 
 .msg-wrap.bot .message {
@@ -426,6 +427,7 @@ header::after {
   padding: 14px 20px;
   backdrop-filter: blur(20px);
   position: relative;
+  z-index: 10;
 }
 
 .input-area::before {
@@ -560,12 +562,12 @@ header::after {
   font-weight: bold;
 }
 
-/* FIX: history-panel ใช้ position:fixed ทุก viewport */
+/* ย้ายมาควบคุม z-index นอก header จะแสดงทับทุกอย่างได้ */
 .history-panel {
   position: fixed;
   top: 64px;
   right: 8px;
-  z-index: 9999;
+  z-index: 99999; /* เพิ่มค่าให้สูงมากๆ */
   background: var(--card2);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -574,7 +576,7 @@ header::after {
   overflow-y: auto;
   display: none;
   animation: fadeUp 0.2s ease;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8); /* เพิ่มเงาให้ดูมีมิติซ้อนทับชัดเจน */
 }
 .history-panel.open { display: block; }
 
@@ -628,19 +630,18 @@ header::after {
 }
 .unit-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
 
-/* FIX: unit-panel ใช้ position:fixed ทุก viewport */
 .unit-panel {
   position: fixed;
   top: 64px;
   right: 8px;
-  z-index: 9999;
+  z-index: 99999; /* เพิ่มค่าให้สูงมากๆ */
   background: var(--card2);
   border: 1px solid var(--border);
   border-radius: 10px;
   width: 340px;
   display: none;
   animation: fadeUp 0.2s ease;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
   max-height: 80vh;
   overflow-y: auto;
 }
@@ -741,6 +742,8 @@ header::after {
   max-width: 82%;
   overflow: hidden;
   animation: fadeUp 0.3s ease both;
+  position: relative;
+  z-index: 2;
 }
 
 .bot-card-header {
@@ -854,20 +857,19 @@ header::after {
 .share-toast.show { opacity: 1; }
 
 /* ════════════════════════════════════
-   RESPONSIVE — แก้ใหม่ทั้งหมด
+   RESPONSIVE
    ════════════════════════════════════ */
 
 * { max-width: 100%; }
 img, video, canvas { max-width: 100%; height: auto; }
 
-/* ── Phone (≤480px): จอเล็กมาก ── */
+/* ── Phone (≤480px) ── */
 @media (max-width: 480px) {
   header { padding: 0 8px; height: 52px; overflow: visible; }
   .logo-img { height: 26px; }
   .header-title { font-size: 12px; letter-spacing: 0; }
   .header-left { gap: 5px; }
 
-  /* FIX: แสดง badge แต่ย่อขนาด — ไม่ซ่อนอีกต่อไป */
   .status-badge {
     font-size: 8px;
     padding: 2px 4px;
@@ -884,7 +886,6 @@ img, video, canvas { max-width: 100%; height: auto; }
   .icon-btn, .unit-btn, .history-btn { width: 28px; height: 28px; font-size: 11px; }
   .header-right { gap: 4px; }
 
-  /* HUD corners */
   .corner-tl, .corner-tr { top: 56px; }
   .corner-bl, .corner-br { bottom: 60px; }
 
@@ -909,7 +910,6 @@ img, video, canvas { max-width: 100%; height: auto; }
   .voice-btn { width: 28px; height: 28px; font-size: 13px; }
   .char-count { min-width: 20px; font-size: 9px; }
 
-  /* FIX: panels full-width บน mobile ขนาดเล็กสุด */
   .history-panel {
     top: 52px; right: 0; left: 0;
     width: 100%;
@@ -932,7 +932,6 @@ img, video, canvas { max-width: 100%; height: auto; }
   .header-title { font-size: 14px; letter-spacing: 1px; }
   .header-left { gap: 6px; }
 
-  /* FIX: แสดง badge แต่ย่อขนาด */
   .status-badge { font-size: 9px; padding: 2px 5px; }
   .user-badge { font-size: 9px; padding: 2px 5px; }
 
@@ -956,7 +955,6 @@ img, video, canvas { max-width: 100%; height: auto; }
   .send-btn { padding: 8px 14px; font-size: 11px; }
   .voice-btn { width: 30px; height: 30px; }
 
-  /* FIX: panels full-width */
   .history-panel {
     top: 54px; right: 0; left: 0;
     width: 100%; max-height: 55vh;
@@ -1030,33 +1028,31 @@ header {
       </button>
       <button class="icon-btn" onclick="clearChat()" title="ล้างแชท">🧹</button>
     </div>
-
-    <!-- HISTORY PANEL — position:fixed แยกออกมาจาก header flow -->
-    <div class="history-panel" id="historyPanel">
-      <div class="history-header">
-        <span>HISTORY</span>
-        <button class="history-clear" onclick="clearHistory()">ล้างทั้งหมด</button>
-      </div>
-      <div class="history-session-info" id="historySessionInfo">SESSION: ------</div>
-      <div id="historyList"><div class="history-empty">ยังไม่มีประวัติ</div></div>
-    </div>
-
-    <!-- UNIT CONVERTER PANEL -->
-    <div class="unit-panel" id="unitPanel">
-      <div class="unit-panel-header">
-        <span>⚖ UNIT CONVERTER</span>
-        <span style="font-size:9px;color:var(--text-dimmer)">พิมพ์ที่ช่องใดก็ได้</span>
-      </div>
-      <div class="unit-tabs">
-        <button class="unit-tab active" onclick="setUnitTab('pressure',this)">แรงดัน</button>
-        <button class="unit-tab" onclick="setUnitTab('torque',this)">แรงบิด</button>
-        <button class="unit-tab" onclick="setUnitTab('length',this)">ความยาว</button>
-        <button class="unit-tab" onclick="setUnitTab('speed',this)">ความเร็ว</button>
-        <button class="unit-tab" onclick="setUnitTab('temp',this)">อุณหภูมิ</button>
-      </div>
-      <div class="unit-content" id="unitContent"></div>
-    </div>
   </header>
+
+  <div class="history-panel" id="historyPanel">
+    <div class="history-header">
+      <span>HISTORY</span>
+      <button class="history-clear" onclick="clearHistory()">ล้างทั้งหมด</button>
+    </div>
+    <div class="history-session-info" id="historySessionInfo">SESSION: ------</div>
+    <div id="historyList"><div class="history-empty">ยังไม่มีประวัติ</div></div>
+  </div>
+
+  <div class="unit-panel" id="unitPanel">
+    <div class="unit-panel-header">
+      <span>⚖ UNIT CONVERTER</span>
+      <span style="font-size:9px;color:var(--text-dimmer)">พิมพ์ที่ช่องใดก็ได้</span>
+    </div>
+    <div class="unit-tabs">
+      <button class="unit-tab active" onclick="setUnitTab('pressure',this)">แรงดัน</button>
+      <button class="unit-tab" onclick="setUnitTab('torque',this)">แรงบิด</button>
+      <button class="unit-tab" onclick="setUnitTab('length',this)">ความยาว</button>
+      <button class="unit-tab" onclick="setUnitTab('speed',this)">ความเร็ว</button>
+      <button class="unit-tab" onclick="setUnitTab('temp',this)">อุณหภูมิ</button>
+    </div>
+    <div class="unit-content" id="unitContent"></div>
+  </div>
 
   <div id="chat">
     <div id="welcome">
@@ -1223,26 +1219,11 @@ header {
 <div class="share-toast" id="shareToast">COPIED TO CLIPBOARD</div>
 
 <script>
-/* ════════════════════════════════════════════════════════════════
-   FIX v2.1:
-   1. storage fallback — รองรับ iOS private mode
-   2. ONLINE / USR badge — แสดงเสมอ ไม่ซ่อนบน mobile
-   3. History panel — position:fixed ทุก viewport
-   4. renderHistory — ทำงานได้แม้ localStorage ถูก block
-   ════════════════════════════════════════════════════════════════ */
-
-/* ══════════════════════════════════════════════════════════════
-   FIX 1: STORAGE FALLBACK
-   รองรับ iOS Safari Private Mode ที่ block localStorage
-   ใช้ storage object แทน localStorage ตรงๆ ทุกที่
-   ══════════════════════════════════════════════════════════════ */
 const storage = (function() {
-  /* ทดสอบว่า localStorage ใช้ได้ไหม */
   try {
     const t = '__test__';
     localStorage.setItem(t, t);
     localStorage.removeItem(t);
-    /* ถ้าผ่าน: ใช้ localStorage จริง */
     return {
       _mem: {},
       getItem(k)    { try { return localStorage.getItem(k); }    catch(e) { return this._mem[k] || null; } },
@@ -1250,7 +1231,6 @@ const storage = (function() {
       removeItem(k) { try { localStorage.removeItem(k); }        catch(e) { delete this._mem[k]; } }
     };
   } catch(e) {
-    /* localStorage ใช้ไม่ได้เลย: ใช้ in-memory แทน */
     console.warn('localStorage not available, using memory storage');
     const mem = {};
     return {
@@ -1262,9 +1242,6 @@ const storage = (function() {
   }
 })();
 
-/* ══════════════════════════════════════════════════════════════
-   1. USER ISOLATION
-   ══════════════════════════════════════════════════════════════ */
 const USER_ID_KEY = 'apitech_userid';
 
 function generateUUID() {
@@ -1291,7 +1268,6 @@ const userId  = initUser();
 const shortId = userId.replace(/-/g, '').slice(0, 6).toUpperCase();
 const HISTORY_KEY = 'apitech_history_' + userId;
 
-/* อัปเดต badge หลัง DOM พร้อม */
 document.addEventListener('DOMContentLoaded', () => {
   const badge = document.getElementById('userBadge');
   if (badge) {
@@ -1302,13 +1278,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (sessInfo) {
     sessInfo.textContent = 'SESSION: ' + shortId + ' · ประวัติของคุณเท่านั้น';
   }
-  /* FIX: renderHistory หลัง DOM พร้อมเสมอ */
   renderHistory();
 });
 
-/* ══════════════════════════════════════════════════════════════
-   2. HEX BACKGROUND ANIMATION
-   ══════════════════════════════════════════════════════════════ */
 const canvas = document.getElementById('bg-canvas');
 const ctx    = canvas.getContext('2d');
 let W = canvas.width  = window.innerWidth;
@@ -1386,9 +1358,6 @@ function loop() {
 }
 loop();
 
-/* ══════════════════════════════════════════════════════════════
-   3. CHAT SYSTEM
-   ══════════════════════════════════════════════════════════════ */
 const webhookURL = "https://a7ivalc0.rpcld.com/webhook/lineoa";
 const chat  = document.getElementById('chat');
 const input = document.getElementById('messageInput');
@@ -1482,9 +1451,6 @@ async function sendMessage() {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FIX 4: HISTORY SYSTEM — ใช้ storage object แทน localStorage
-   ══════════════════════════════════════════════════════════════ */
 function loadHistory() {
   try {
     return JSON.parse(storage.getItem(HISTORY_KEY) || '[]');
@@ -1512,7 +1478,6 @@ function clearHistory() {
   renderHistory();
 }
 
-/* FIX: renderHistory — guard ครบถ้วน ทำงานได้ทุกสถานการณ์ */
 function renderHistory() {
   const list  = document.getElementById('historyList');
   const badge = document.getElementById('histBadge');
@@ -1559,7 +1524,6 @@ function toggleHistory() {
   if (p.classList.contains('open')) renderHistory();
 }
 
-/* click outside: ปิด panel */
 document.addEventListener('click', e => {
   if (!e.target.closest('.history-panel') && !e.target.closest('.history-btn')) {
     const hp = document.getElementById('historyPanel');
@@ -1571,9 +1535,6 @@ document.addEventListener('click', e => {
   }
 });
 
-/* ══════════════════════════════════════════════════════════════
-   5. UNIT CONVERTER 2.0
-   ══════════════════════════════════════════════════════════════ */
 const unitDefs = {
   pressure: {
     label: 'แรงดัน (Pressure)', base: 'kPa',
@@ -1700,9 +1661,6 @@ function toggleUnit() {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   6. CARD MESSAGE RENDERER
-   ══════════════════════════════════════════════════════════════ */
 function parseToCard(text) {
   const lines = text.split('\n').filter(l => l.trim());
   if (lines.length < 3) return null;
@@ -1819,9 +1777,6 @@ function addCardActions(card, wrap, text, question) {
   wrap.appendChild(actions);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   7. VOICE INPUT
-   ══════════════════════════════════════════════════════════════ */
 let recognition  = null;
 let isListening  = false;
 let voiceTimeout = null;
@@ -1879,9 +1834,6 @@ function startVoice() {
 
 function toggleVoice() { if (isListening) stopVoice(); else startVoice(); }
 
-/* ══════════════════════════════════════════════════════════════
-   8. SHARE RESULT
-   ══════════════════════════════════════════════════════════════ */
 function shareResult(text, question) {
   const shareText = ['🔧 AI API TECH T0.1', '', `📌 คำถาม: ${question}`, '', '📊 ผลลัพธ์:', text].join('\n');
   navigator.clipboard.writeText(shareText).then(() => {
