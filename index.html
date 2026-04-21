@@ -1496,10 +1496,6 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
           เลือกเกรดน้ำมันเครื่อง (Oil Viscosity)
         </button>
 
-        <button class="quick-btn" onclick="openModal('pistonheat')">
-          <img src="piston_heat_icon.png" alt="Piston Heat" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ความร้อนที่ลูกสูบรับ (Piston Heat Load)
-        </button>
 
         <button class="quick-btn" onclick="openModal('knock')">
           <img src="detonation_icon.png" alt="Knock" style="height:8em;vertical-align:middle;margin-right:5px;">
@@ -2301,20 +2297,6 @@ const modalData = {
       'น้ำมันเครื่อง cr 13 rpm 11000',
       'oil cr 10.5 rpm 8000',
       'น้ำมัน กำลังอัด 12 รอบต่อนาที 9000',
-    ]
-  },
-
-  // ⚠️ regex: cc ซีซี / cr/compression/กำลังอัด / rpm/รอบต่อนาที — ไม่รองรับวงเล็บ
-  pistonheat: {
-    title: 'ความร้อนที่ลูกสูบรับ (Piston Heat Load)',
-    subtitle: 'PISTON THERMAL LOAD',
-    icon: 'all icon/piston_heat_icon.png',
-    desc: 'ประเมินความร้อนสะสมที่หัวลูกสูบรับ และแนะนำหัวเทียน/น้ำมัน',
-    params: ['cc ซีซี', 'cr ตัวเลข (กำลังอัด)', 'rpm ตัวเลข (รอบต่อนาที)'],
-    examples: [
-      '150cc cr 12 rpm 10000',
-      '250cc cr 11.5 rpm 9000',
-      '125cc กำลังอัด 13 รอบต่อนาที 11000',
     ]
   },
 
