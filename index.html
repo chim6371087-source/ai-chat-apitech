@@ -2,12 +2,12 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
 <title>AI API TECH T0.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Sarabun:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-/* ── ตัวแปรสี / CSS Variables ── */
 :root {
   --orange: #ff6a00;
   --orange2: #ff9f45;
@@ -23,724 +23,205 @@
   --text-dimmer: #444;
   --green: #00ff88;
   --blue: #00aaff;
+  --red: #ff3333;
   --font-head: 'Rajdhani', sans-serif;
   --font-body: 'Sarabun', sans-serif;
   --font-mono: 'Share Tech Mono', monospace;
-
-  /* ── ระบบซูม ── */
   --zoom: 1;
   --base-font: 17px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: calc(var(--base-font) * var(--zoom)); transition: font-size 0.2s ease; }
+body { height: 100%; background: var(--dark); color: var(--text); font-family: var(--font-body); overflow: hidden; font-size: 1rem; }
 
-html {
-  /* ใช้ font-size เป็นตัวควบคุมซูมหลัก — rem จะ scale ตามนี้ */
-  font-size: calc(var(--base-font) * var(--zoom));
-  transition: font-size 0.2s ease;
-}
+#bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; width: 100% !important; height: 100% !important; }
+.grid-overlay { position: fixed; inset: 0; z-index: 0; background-image: linear-gradient(rgba(255,106,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,106,0,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
+.vignette { position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%); pointer-events: none; }
 
-body {
-  height: 100%;
-  background: var(--dark);
-  color: var(--text);
-  font-family: var(--font-body);
-  overflow: hidden;
-  font-size: 1rem;
-}
+#app { position: relative; z-index: 1; height: 100vh; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
 
-/* ── พื้นหลัง canvas animation ── */
-#bg-canvas {
-  position: fixed; inset: 0; z-index: 0;
-  pointer-events: none;
-  width: 100% !important; height: 100% !important;
-}
+header { background: rgba(8,8,8,0.95); border-bottom: 1px solid var(--border); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(20px); position: relative; overflow: visible; flex-shrink: 0; }
+header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--orange), transparent); animation: scanline 4s ease-in-out infinite; }
+@keyframes scanline { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
-.grid-overlay {
-  position: fixed; inset: 0; z-index: 0;
-  background-image:
-    linear-gradient(rgba(255,106,0,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,106,0,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
-}
-
-.vignette {
-  position: fixed; inset: 0; z-index: 0;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
-  pointer-events: none;
-}
-
-#app {
-  position: relative; z-index: 1;
-  height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  overflow: hidden;
-}
-
-/* ── Header bar ── */
-header {
-  background: rgba(8,8,8,0.95);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  backdrop-filter: blur(20px);
-  position: relative;
-  overflow: visible;
-  flex-shrink: 0;
-}
-
-header::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--orange), transparent);
-  animation: scanline 4s ease-in-out infinite;
-}
-
-@keyframes scanline {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex: 1;
-  min-width: 0;
-}
-
-.logo-img {
-  height: 80px;
-  width: auto;
-  filter: drop-shadow(0 0 8px var(--orange));
-  flex-shrink: 0;
-}
-
-.header-title {
-  font-family: var(--font-head);
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: var(--text);
-  white-space: nowrap;
-}
-
+.header-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+.logo-img { height: 80px; width: auto; filter: drop-shadow(0 0 8px var(--orange)); flex-shrink: 0; }
+.header-title { font-family: var(--font-head); font-size: 1.35rem; font-weight: 700; letter-spacing: 3px; color: var(--text); white-space: nowrap; }
 .header-title span { color: var(--orange); }
 
-.user-badge {
+.user-badge { font-family: var(--font-mono); font-size: 0.65rem; color: var(--blue); background: rgba(0,170,255,0.08); border: 1px solid rgba(0,170,255,0.25); padding: 3px 8px; border-radius: 3px; letter-spacing: 1px; display: flex; align-items: center; gap: 5px; cursor: default; position: relative; white-space: nowrap; flex-shrink: 0; }
+.user-badge:hover::after { content: attr(data-fullid); position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--card2); border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; font-size: 0.58rem; color: var(--text-dim); white-space: nowrap; z-index: 200; }
+
+.status-badge { font-family: var(--font-mono); font-size: 0.65rem; color: var(--green); background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25); padding: 3px 8px; border-radius: 3px; letter-spacing: 1px; display: flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0; }
+.status-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse-green 2s ease-in-out infinite; flex-shrink: 0; }
+@keyframes pulse-green { 0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--green); } 50% { opacity: 0.4; box-shadow: none; } }
+
+/* ── QUOTA BADGE ── */
+.quota-badge {
   font-family: var(--font-mono);
   font-size: 0.65rem;
-  color: var(--blue);
-  background: rgba(0,170,255,0.08);
-  border: 1px solid rgba(0,170,255,0.25);
   padding: 3px 8px;
   border-radius: 3px;
   letter-spacing: 1px;
   display: flex;
   align-items: center;
   gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: default;
-  position: relative;
-  white-space: nowrap;
-  flex-shrink: 0;
+  transition: all 0.3s;
 }
+.quota-badge.quota-ok { color: var(--green); background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25); }
+.quota-badge.quota-warn { color: #ffaa00; background: rgba(255,170,0,0.08); border: 1px solid rgba(255,170,0,0.35); animation: pulse-warn 1.5s ease-in-out infinite; }
+.quota-badge.quota-near { color: var(--orange); background: rgba(255,106,0,0.1); border: 1px solid rgba(255,106,0,0.4); animation: pulse-warn 1s ease-in-out infinite; }
+.quota-badge.quota-full { color: var(--red); background: rgba(255,51,51,0.1); border: 1px solid rgba(255,51,51,0.4); animation: pulse-red 0.8s ease-in-out infinite; }
+@keyframes pulse-warn { 0%,100%{opacity:1} 50%{opacity:0.6} }
+@keyframes pulse-red  { 0%,100%{box-shadow:0 0 0 0 rgba(255,51,51,0.4)} 50%{box-shadow:0 0 0 4px rgba(255,51,51,0)} }
 
-.user-badge:hover::after {
-  content: attr(data-fullid);
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--card2);
-  border: 1px solid var(--border);
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 0.58rem;
-  color: var(--text-dim);
-  white-space: nowrap;
-  z-index: 200;
-}
-
-.status-badge {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--green);
-  background: rgba(0,255,136,0.08);
-  border: 1px solid rgba(0,255,136,0.25);
-  padding: 3px 8px;
-  border-radius: 3px;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.status-dot {
-  width: 6px; height: 6px;
-  background: var(--green);
-  border-radius: 50%;
-  animation: pulse-green 2s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-@keyframes pulse-green {
-  0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--green); }
-  50% { opacity: 0.4; box-shadow: none; }
-}
-
-.header-right {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.icon-btn {
-  width: 34px; height: 34px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-dim);
-  cursor: pointer;
+/* ── QUOTA OVERLAY ── */
+.quota-overlay {
+  position: fixed; inset: 0; z-index: 200000;
+  background: rgba(0,0,0,0.88);
   display: flex; align-items: center; justify-content: center;
-  font-size: 30px;
-  transition: all 0.2s;
+  padding: 20px;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.quota-box {
+  background: var(--card2);
+  border: 1px solid rgba(255,51,51,0.5);
+  border-radius: 16px;
+  padding: 32px 28px;
+  text-align: center;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 0 60px rgba(255,51,51,0.2);
+}
+.quota-box-icon { font-size: 3rem; margin-bottom: 12px; }
+.quota-box-title { font-family: var(--font-head); font-size: 1.4rem; font-weight: 700; letter-spacing: 2px; color: var(--red); margin-bottom: 8px; }
+.quota-box-sub { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); letter-spacing: 1px; line-height: 1.8; margin-bottom: 20px; }
+.quota-box-count { font-family: var(--font-mono); font-size: 2rem; font-weight: 700; color: var(--orange); margin-bottom: 6px; }
+.quota-box-label { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dimmer); letter-spacing: 1px; margin-bottom: 24px; }
+.quota-box-contact {
+  background: rgba(255,106,0,0.08);
+  border: 1px solid rgba(255,106,0,0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  line-height: 1.7;
 }
 
-.icon-btn:hover {
-  border-color: var(--orange);
-  color: var(--orange);
-  background: var(--orange-glow);
-}
+.header-right { display: flex; gap: 8px; flex-shrink: 0; }
+.icon-btn { width: 34px; height: 34px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 30px; transition: all 0.2s; }
+.icon-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
 
-/* ── พื้นที่แชท ── */
-#chat {
-  overflow-y: auto;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-
+#chat { overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 0; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 #chat::-webkit-scrollbar { width: 4px; }
 #chat::-webkit-scrollbar-track { background: transparent; }
 #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 #chat::-webkit-scrollbar-thumb:hover { background: var(--orange); }
 
-/* ── Welcome ── */
-#welcome {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
-  animation: fadeUp 0.6s ease both;
-}
-
+#welcome { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; animation: fadeUp 0.6s ease both; }
 .welcome-logo-wrap { position: relative; margin-bottom: 50px; }
-
-.welcome-logo {
-  height: 100px;
-  filter: drop-shadow(0 0 20px var(--orange));
-  animation: float 4s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-.welcome-ring {
-  position: absolute;
-  inset: -16px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  animation: spin 8s linear infinite;
-}
-
-.welcome-ring::before {
-  content: '';
-  position: absolute;
-  top: -2px; left: 50%;
-  width: 4px; height: 4px;
-  background: var(--orange);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--orange);
-  transform: translateX(-50%);
-}
-
+.welcome-logo { height: 100px; filter: drop-shadow(0 0 20px var(--orange)); animation: float 4s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.welcome-ring { position: absolute; inset: -16px; border-radius: 50%; border: 1px solid var(--border); animation: spin 8s linear infinite; }
+.welcome-ring::before { content: ''; position: absolute; top: -2px; left: 50%; width: 4px; height: 4px; background: var(--orange); border-radius: 50%; box-shadow: 0 0 8px var(--orange); transform: translateX(-50%); }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-.welcome-title {
-  font-family: var(--font-head);
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 4px;
-  margin-bottom: 8px;
-}
-
+.welcome-title { font-family: var(--font-head); font-size: 2rem; font-weight: 700; letter-spacing: 4px; margin-bottom: 8px; }
 .welcome-title span { color: var(--orange); }
+.welcome-sub { font-size: 1rem; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 32px; }
 
-.welcome-sub {
-  font-size: 1rem;
-  color: var(--text-dim);
-  letter-spacing: 1px;
-  margin-bottom: 32px;
-}
+.quick-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; width: 100%; max-width: 800px; }
+.quick-btn { background: var(--card); border: 1px solid rgba(255,106,0,0.4); color: #e8e8e8; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-family: var(--font-body); font-size: 0.95rem; font-weight: 500; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 10px; line-height: 1.4; letter-spacing: 0.3px; text-shadow: 0 0 12px rgba(255,255,255,0.15); }
+.quick-btn:hover { border-color: var(--orange); color: #ffffff; background: rgba(255,106,0,0.12); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(255,106,0,0.2); text-shadow: 0 0 16px rgba(255,200,100,0.4); }
+.quick-btn .qicon { font-size: 1.15rem; flex-shrink: 0; filter: drop-shadow(0 0 4px rgba(255,106,0,0.5)); }
 
-/* ── Grid ปุ่มหมวดหมู่ ── */
-.quick-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 8px;
-  width: 100%;
-  max-width: 800px;
-}
-
-.quick-btn {
-  background: var(--card);
-  border: 1px solid rgba(255,106,0,0.4);
-  color: #e8e8e8;
-  padding: 12px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  font-weight: 500;
-  text-align: left;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  line-height: 1.4;
-  letter-spacing: 0.3px;
-  text-shadow: 0 0 12px rgba(255,255,255,0.15);
-}
-
-.quick-btn:hover {
-  border-color: var(--orange);
-  color: #ffffff;
-  background: rgba(255,106,0,0.12);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(255,106,0,0.2);
-  text-shadow: 0 0 16px rgba(255,200,100,0.4);
-}
-
-.quick-btn .qicon {
-  font-size: 1.15rem;
-  flex-shrink: 0;
-  filter: drop-shadow(0 0 4px rgba(255,106,0,0.5));
-}
-
-/* ── Messages ── */
-.msg-wrap {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 16px;
-  animation: fadeUp 0.3s ease both;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
+.msg-wrap { display: flex; flex-direction: column; margin-bottom: 16px; animation: fadeUp 0.3s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .msg-wrap.user { align-items: flex-end; }
 .msg-wrap.bot  { align-items: flex-start; }
-
-.msg-meta {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-dimmer);
-  margin-bottom: 5px;
-  letter-spacing: 0.5px;
-  padding: 0 4px;
-}
-
+.msg-meta { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dimmer); margin-bottom: 5px; letter-spacing: 0.5px; padding: 0 4px; }
 .msg-wrap.user .msg-meta { color: rgba(255,106,0,0.4); }
+.message { max-width: 72%; padding: 12px 16px; border-radius: 10px; font-size: 1rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word; }
+.msg-wrap.user .message { background: linear-gradient(135deg, var(--orange), #ff4500); color: #000; font-weight: 500; border-bottom-right-radius: 3px; box-shadow: 0 4px 20px rgba(255,106,0,0.25); position: relative; z-index: 2; }
+.msg-wrap.bot .message { background: var(--card); border: 1px solid var(--border); border-bottom-left-radius: 3px; font-family: var(--font-mono); font-size: 0.9rem; color: #e0e0e0; }
+.msg-wrap.bot .message::before { content: '> '; color: var(--orange); font-weight: bold; }
 
-.message {
-  max-width: 72%;
-  padding: 12px 16px;
-  border-radius: 10px;
-  font-size: 1rem;
-  line-height: 1.8;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.msg-wrap.user .message {
-  background: linear-gradient(135deg, var(--orange), #ff4500);
-  color: #000;
-  font-weight: 500;
-  border-bottom-right-radius: 3px;
-  box-shadow: 0 4px 20px rgba(255,106,0,0.25);
-  position: relative;
-  z-index: 2;
-}
-
-.msg-wrap.bot .message {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-bottom-left-radius: 3px;
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  color: #e0e0e0;
-}
-
-.msg-wrap.bot .message::before {
-  content: '> ';
-  color: var(--orange);
-  font-weight: bold;
-}
-
-/* ── Loading ── */
-.loading-wrap {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.loading-bubble {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  border-bottom-left-radius: 3px;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.loading-dot {
-  width: 6px; height: 6px;
-  background: var(--orange);
-  border-radius: 50%;
-  animation: blink 1.2s ease-in-out infinite;
-}
+.loading-wrap { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+.loading-bubble { background: var(--card); border: 1px solid var(--border); border-radius: 10px; border-bottom-left-radius: 3px; padding: 14px 18px; display: flex; align-items: center; gap: 6px; }
+.loading-dot { width: 6px; height: 6px; background: var(--orange); border-radius: 50%; animation: blink 1.2s ease-in-out infinite; }
 .loading-dot:nth-child(2) { animation-delay: 0.2s; }
 .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
 
-@keyframes blink {
-  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1); }
-}
-
-/* ── Input area ── */
-.input-area {
-  background: rgba(8,8,8,0.95);
-  border-top: 1px solid var(--border);
-  padding: 14px 20px;
-  backdrop-filter: blur(20px);
-  position: relative;
-  z-index: 10;
-}
-
-.input-area::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--orange), transparent);
-  opacity: 0.4;
-}
-
-.input-inner {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 6px 6px 6px 16px;
-  transition: border-color 0.2s;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.input-inner:focus-within {
-  border-color: var(--border-bright);
-  box-shadow: 0 0 0 3px rgba(255,106,0,0.08);
-}
-
-.input-prefix {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--orange);
-  flex-shrink: 0;
-  user-select: none;
-}
-
-#messageInput {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 1rem;
-  caret-color: var(--orange);
-  min-width: 0;
-}
-
+.input-area { background: rgba(8,8,8,0.95); border-top: 1px solid var(--border); padding: 14px 20px; backdrop-filter: blur(20px); position: relative; z-index: 10; }
+.input-area::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--orange), transparent); opacity: 0.4; }
+.input-inner { display: flex; gap: 10px; align-items: center; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 6px 6px 16px; transition: border-color 0.2s; max-width: 900px; margin: 0 auto; }
+.input-inner:focus-within { border-color: var(--border-bright); box-shadow: 0 0 0 3px rgba(255,106,0,0.08); }
+.input-prefix { font-family: var(--font-mono); font-size: 0.85rem; color: var(--orange); flex-shrink: 0; user-select: none; }
+#messageInput { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font-body); font-size: 1rem; caret-color: var(--orange); min-width: 0; }
 #messageInput::placeholder { color: var(--text-dimmer); }
-
-.send-btn {
-  background: var(--orange);
-  border: none;
-  color: #000;
-  font-family: var(--font-head);
-  font-weight: 700;
-  font-size: 0.85rem;
-  letter-spacing: 2px;
-  padding: 9px 20px;
-  border-radius: 7px;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.send-btn:hover {
-  background: var(--orange2);
-  box-shadow: 0 0 16px rgba(255,106,0,0.4);
-  transform: translateY(-1px);
-}
-
+.send-btn { background: var(--orange); border: none; color: #000; font-family: var(--font-head); font-weight: 700; font-size: 0.85rem; letter-spacing: 2px; padding: 9px 20px; border-radius: 7px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
+.send-btn:hover { background: var(--orange2); box-shadow: 0 0 16px rgba(255,106,0,0.4); transform: translateY(-1px); }
 .send-btn:active { transform: translateY(0); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+#messageInput:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* ── มุมกรอบ ── */
-.corner-tl, .corner-tr, .corner-bl, .corner-br {
-  position: fixed;
-  width: 20px; height: 20px;
-  z-index: 100;
-  pointer-events: none;
-}
-
+.corner-tl, .corner-tr, .corner-bl, .corner-br { position: fixed; width: 20px; height: 20px; z-index: 100; pointer-events: none; }
 .corner-tl { top: 68px; left: 4px; border-top: 1px solid var(--orange); border-left: 1px solid var(--orange); }
 .corner-tr { top: 68px; right: 4px; border-top: 1px solid var(--orange); border-right: 1px solid var(--orange); }
 .corner-bl { bottom: 72px; left: 4px; border-bottom: 1px solid var(--orange); border-left: 1px solid var(--orange); }
 .corner-br { bottom: 72px; right: 4px; border-bottom: 1px solid var(--orange); border-right: 1px solid var(--orange); }
 
-.copy-btn {
-  display: inline-block;
-  margin-top: 6px;
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-dimmer);
-  background: transparent;
-  border: 1px solid var(--text-dimmer);
-  padding: 2px 8px;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+.copy-btn { display: inline-block; margin-top: 6px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dimmer); background: transparent; border: 1px solid var(--text-dimmer); padding: 2px 8px; border-radius: 3px; cursor: pointer; transition: all 0.2s; }
 .copy-btn:hover { color: var(--orange); border-color: var(--orange); }
+.char-count { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dimmer); flex-shrink: 0; min-width: 28px; text-align: right; }
 
-.char-count {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-dimmer);
-  flex-shrink: 0;
-  min-width: 28px;
-  text-align: right;
-}
-
-/* ── History Panel ── */
-.history-btn {
-  width: 34px; height: 34px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-dim);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-  transition: all 0.2s;
-  position: relative;
-}
+.history-btn { width: 34px; height: 34px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s; position: relative; }
 .history-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
-
-.history-badge {
-  position: absolute; top: -4px; right: -4px;
-  width: 14px; height: 14px;
-  background: var(--orange); border-radius: 50%;
-  font-size: 0.55rem; font-family: var(--font-mono);
-  color: #000; display: flex; align-items: center; justify-content: center;
-  font-weight: bold;
-}
-
-.history-panel {
-  position: fixed;
-  top: 64px; right: 8px;
-  z-index: 99999;
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  width: 320px;
-  max-height: 360px;
-  overflow-y: auto;
-  display: none;
-  animation: fadeUp 0.2s ease;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-}
+.history-badge { position: absolute; top: -4px; right: -4px; width: 14px; height: 14px; background: var(--orange); border-radius: 50%; font-size: 0.55rem; font-family: var(--font-mono); color: #000; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.history-panel { position: fixed; top: 64px; right: 8px; z-index: 99999; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; width: 320px; max-height: 360px; overflow-y: auto; display: none; animation: fadeUp 0.2s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.8); }
 .history-panel.open { display: block; }
-
-.history-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 14px 8px;
-  border-bottom: 1px solid var(--border);
-  font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);
-  letter-spacing: 1px;
-}
-
-.history-session-info {
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  color: var(--blue);
-  padding: 4px 14px 8px;
-  opacity: 0.7;
-  letter-spacing: 0.5px;
-}
-
-.history-clear {
-  background: none; border: none; color: var(--text-dimmer);
-  cursor: pointer; font-size: 0.65rem; font-family: var(--font-mono);
-  transition: color 0.2s;
-}
+.history-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 8px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim); letter-spacing: 1px; }
+.history-session-info { font-family: var(--font-mono); font-size: 0.58rem; color: var(--blue); padding: 4px 14px 8px; opacity: 0.7; letter-spacing: 0.5px; }
+.history-clear { background: none; border: none; color: var(--text-dimmer); cursor: pointer; font-size: 0.65rem; font-family: var(--font-mono); transition: color 0.2s; }
 .history-clear:hover { color: var(--orange); }
-
-.history-item {
-  padding: 9px 14px; cursor: pointer;
-  border-bottom: 1px solid rgba(255,106,0,0.06);
-  font-family: var(--font-body); font-size: 0.85rem; color: var(--text-dim);
-  transition: all 0.15s; display: flex; align-items: center; gap: 8px;
-}
+.history-item { padding: 9px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,106,0,0.06); font-family: var(--font-body); font-size: 0.85rem; color: var(--text-dim); transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
 .history-item:hover { background: rgba(255,106,0,0.07); color: var(--text); }
 .history-item span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .history-time { font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-dimmer); flex-shrink: 0; }
-.history-empty { padding: 20px; text-align: center; color: var(--text-dimmer);
-  font-family: var(--font-mono); font-size: 0.7rem; }
+.history-empty { padding: 20px; text-align: center; color: var(--text-dimmer); font-family: var(--font-mono); font-size: 0.7rem; }
 
-/* ── Unit Converter Panel ── */
-.unit-btn {
-  width: 34px; height: 34px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-dim);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-  transition: all 0.2s;
-}
+.unit-btn { width: 34px; height: 34px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s; }
 .unit-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
-
-.unit-panel {
-  position: fixed;
-  top: 64px; right: 8px;
-  z-index: 99999;
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  width: 340px;
-  display: none;
-  animation: fadeUp 0.2s ease;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-  max-height: 80vh;
-  overflow-y: auto;
-}
+.unit-panel { position: fixed; top: 64px; right: 8px; z-index: 99999; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; width: 340px; display: none; animation: fadeUp 0.2s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.8); max-height: 80vh; overflow-y: auto; }
 .unit-panel.open { display: block; }
-
-.unit-panel-header {
-  padding: 12px 14px 8px;
-  border-bottom: 1px solid var(--border);
-  font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);
-  letter-spacing: 1px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-
-.unit-tabs {
-  display: flex; gap: 0;
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
+.unit-panel-header { padding: 12px 14px 8px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim); letter-spacing: 1px; display: flex; align-items: center; justify-content: space-between; }
+.unit-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
 .unit-tabs::-webkit-scrollbar { display: none; }
-
-.unit-tab {
-  flex-shrink: 0;
-  padding: 8px 10px; text-align: center;
-  font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim);
-  cursor: pointer; border: none; background: none;
-  border-bottom: 2px solid transparent;
-  transition: all 0.15s; letter-spacing: 0.5px;
-}
+.unit-tab { flex-shrink: 0; padding: 8px 10px; text-align: center; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; transition: all 0.15s; letter-spacing: 0.5px; }
 .unit-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
 .unit-tab:hover:not(.active) { color: var(--text); }
-
 .unit-content { padding: 12px 14px 14px; }
-
 .unit-all-grid { display: flex; flex-direction: column; gap: 8px; }
 .unit-all-row { display: grid; grid-template-columns: 60px 1fr; align-items: center; gap: 8px; }
 .unit-all-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--orange); text-align: right; user-select: none; }
-.unit-all-input {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 12px;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  width: 100%;
-}
+.unit-all-input { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text); font-family: var(--font-mono); font-size: 0.85rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; width: 100%; }
 .unit-all-input:focus { border-color: var(--border-bright); box-shadow: 0 0 0 2px rgba(255,106,0,0.1); }
 .unit-all-input.result-field { color: #ccc; }
 .unit-divider { height: 1px; background: var(--border); margin: 4px 0; opacity: 0.5; }
 .unit-hint { font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-dimmer); text-align: center; margin-top: 8px; letter-spacing: 0.5px; }
 
-/* ── Bot Card ── */
-.bot-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-bottom-left-radius: 3px;
-  border-radius: 10px;
-  max-width: 82%;
-  overflow: hidden;
-  animation: fadeUp 0.3s ease both;
-  position: relative;
-  z-index: 2;
-}
-
-.bot-card-header {
-  background: rgba(255,106,0,0.1);
-  border-bottom: 1px solid var(--border);
-  padding: 7px 14px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-
-.bot-card-title {
-  font-family: var(--font-mono); font-size: 0.65rem;
-  color: var(--orange); letter-spacing: 1px;
-}
-
+.bot-card { background: var(--card); border: 1px solid var(--border); border-bottom-left-radius: 3px; border-radius: 10px; max-width: 82%; overflow: hidden; animation: fadeUp 0.3s ease both; position: relative; z-index: 2; }
+.bot-card-header { background: rgba(255,106,0,0.1); border-bottom: 1px solid var(--border); padding: 7px 14px; display: flex; align-items: center; justify-content: space-between; }
+.bot-card-title { font-family: var(--font-mono); font-size: 0.65rem; color: var(--orange); letter-spacing: 1px; }
 .bot-card-body { padding: 0; }
-
 .card-section { border-bottom: 1px solid rgba(255,106,0,0.08); padding: 8px 14px; }
 .card-section:last-child { border-bottom: none; }
 .card-section-label { font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-dimmer); letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
@@ -752,469 +233,69 @@ header::after {
 .card-plain { font-family: var(--font-mono); font-size: 0.8rem; color: #e0e0e0; line-height: 1.8; white-space: pre-wrap; }
 .card-actions { padding: 6px 14px 8px; display: flex; gap: 6px; }
 
-/* ── Voice Input ── */
-.voice-btn {
-  width: 34px; height: 34px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-dim);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
+.voice-btn { width: 34px; height: 34px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all 0.2s; flex-shrink: 0; }
 .voice-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
 .voice-btn.listening { border-color: #ff3333; color: #ff3333; background: rgba(255,51,51,0.12); animation: pulse-red 1s ease-in-out infinite; }
-@keyframes pulse-red { 0%,100% { box-shadow: 0 0 0 0 rgba(255,51,51,0.4); } 50% { box-shadow: 0 0 0 6px rgba(255,51,51,0); } }
-
-.voice-status {
-  font-family: var(--font-mono); font-size: 0.65rem; color: #ff3333;
-  letter-spacing: 1px; margin-left: 4px; flex-shrink: 0; display: none;
-}
+.voice-status { font-family: var(--font-mono); font-size: 0.65rem; color: #ff3333; letter-spacing: 1px; margin-left: 4px; flex-shrink: 0; display: none; }
 .voice-status.active { display: inline; animation: blink-text 1s ease-in-out infinite; }
 @keyframes blink-text { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
 .share-btn { display: inline-block; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dimmer); background: transparent; border: 1px solid var(--text-dimmer); padding: 2px 8px; border-radius: 3px; cursor: pointer; transition: all 0.2s; }
 .share-btn:hover { color: #00cc66; border-color: #00cc66; }
-
-.share-toast {
-  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-  background: #00cc66; color: #000;
-  font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700;
-  padding: 8px 20px; border-radius: 20px;
-  letter-spacing: 1px; z-index: 9999;
-  opacity: 0; pointer-events: none; transition: opacity 0.3s;
-}
+.share-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #00cc66; color: #000; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; padding: 8px 20px; border-radius: 20px; letter-spacing: 1px; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .share-toast.show { opacity: 1; }
 
-/* ══════════════════════════════════════════════
-   ZOOM CONTROL PANEL  ← ใหม่
-   ══════════════════════════════════════════════ */
-
-.zoom-panel {
-  position: fixed;
-  bottom: 90px;
-  right: 12px;
-  z-index: 99998;
-  background: var(--card2);
-  border: 1px solid var(--border-bright);
-  border-radius: 12px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 0 20px rgba(255,106,0,0.1);
-  backdrop-filter: blur(10px);
-  transition: opacity 0.2s;
-  min-width: 46px;
-}
-
-.zoom-panel:hover { opacity: 1 !important; }
-
-/* ปุ่มเปิด/ปิด zoom panel ลอยอยู่ที่มุม */
-.zoom-fab {
-  position: fixed;
-  bottom: 90px;
-  right: 12px;
-  z-index: 99999;
-  width: 44px; height: 44px;
-  background: var(--card2);
-  border: 1px solid var(--border-bright);
-  border-radius: 50%;
-  color: var(--orange);
-  font-size: 18px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 12px rgba(255,106,0,0.2);
-  transition: all 0.2s;
-  backdrop-filter: blur(10px);
-}
-.zoom-fab:hover {
-  background: rgba(255,106,0,0.15);
-  border-color: var(--orange);
-  transform: scale(1.08);
-}
-.zoom-fab.active {
-  background: rgba(255,106,0,0.2);
-  border-color: var(--orange);
-  box-shadow: 0 0 20px rgba(255,106,0,0.4);
-}
-
-/* กล่อง zoom controls จริง */
-.zoom-controls {
-  position: fixed;
-  bottom: 142px;
-  right: 8px;
-  z-index: 99998;
-  background: var(--card2);
-  border: 1px solid var(--border-bright);
-  border-radius: 14px;
-  padding: 14px 14px 12px;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  width: 200px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 24px rgba(255,106,0,0.12);
-  backdrop-filter: blur(12px);
-  animation: fadeUp 0.2s ease;
-}
+.zoom-fab { position: fixed; bottom: 90px; right: 12px; z-index: 99999; width: 44px; height: 44px; background: var(--card2); border: 1px solid var(--border-bright); border-radius: 50%; color: var(--orange); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 12px rgba(255,106,0,0.2); transition: all 0.2s; backdrop-filter: blur(10px); }
+.zoom-fab:hover { background: rgba(255,106,0,0.15); border-color: var(--orange); transform: scale(1.08); }
+.zoom-fab.active { background: rgba(255,106,0,0.2); border-color: var(--orange); box-shadow: 0 0 20px rgba(255,106,0,0.4); }
+.zoom-controls { position: fixed; bottom: 142px; right: 8px; z-index: 99998; background: var(--card2); border: 1px solid var(--border-bright); border-radius: 14px; padding: 14px 14px 12px; display: none; flex-direction: column; align-items: center; gap: 10px; width: 200px; box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 24px rgba(255,106,0,0.12); backdrop-filter: blur(12px); animation: fadeUp 0.2s ease; }
 .zoom-controls.open { display: flex; }
-
-.zoom-title {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--orange);
-  letter-spacing: 2px;
-  align-self: flex-start;
-}
-
-/* แถวปุ่ม − ค่า + */
-.zoom-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.zoom-minus, .zoom-plus {
-  width: 36px; height: 36px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 1.1rem;
-  font-family: var(--font-mono);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
-  flex-shrink: 0;
-  user-select: none;
-}
-.zoom-minus:hover, .zoom-plus:hover {
-  border-color: var(--orange);
-  color: var(--orange);
-  background: rgba(255,106,0,0.1);
-}
-.zoom-minus:active, .zoom-plus:active { transform: scale(0.92); }
-
-.zoom-val {
-  flex: 1;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--orange);
-  letter-spacing: 1px;
-}
-
-/* Slider ซูม */
-.zoom-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-
-.zoom-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: var(--orange);
-  cursor: pointer;
-  box-shadow: 0 0 8px rgba(255,106,0,0.5);
-  transition: transform 0.15s;
-}
-.zoom-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
-.zoom-slider::-moz-range-thumb {
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: var(--orange);
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 0 8px rgba(255,106,0,0.5);
-}
-
-/* ปุ่ม reset */
-.zoom-reset {
-  background: none;
-  border: 1px solid rgba(255,106,0,0.3);
-  border-radius: 6px;
-  color: var(--text-dimmer);
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 1px;
-  padding: 4px 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-}
+.zoom-title { font-family: var(--font-mono); font-size: 0.65rem; color: var(--orange); letter-spacing: 2px; align-self: flex-start; }
+.zoom-row { display: flex; align-items: center; gap: 8px; width: 100%; }
+.zoom-minus, .zoom-plus { width: 36px; height: 36px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1.1rem; font-family: var(--font-mono); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; user-select: none; }
+.zoom-minus:hover, .zoom-plus:hover { border-color: var(--orange); color: var(--orange); background: rgba(255,106,0,0.1); }
+.zoom-val { flex: 1; text-align: center; font-family: var(--font-mono); font-size: 1rem; font-weight: 700; color: var(--orange); letter-spacing: 1px; }
+.zoom-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer; }
+.zoom-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--orange); cursor: pointer; }
+.zoom-presets { display: flex; gap: 4px; width: 100%; }
+.zoom-preset-btn { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 5px; color: var(--text-dim); font-family: var(--font-mono); font-size: 0.58rem; padding: 4px 2px; cursor: pointer; transition: all 0.15s; text-align: center; }
+.zoom-preset-btn:hover, .zoom-preset-btn.active { border-color: var(--orange); color: var(--orange); background: rgba(255,106,0,0.1); }
+.zoom-reset { background: none; border: 1px solid rgba(255,106,0,0.3); border-radius: 6px; color: var(--text-dimmer); font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 1px; padding: 4px 12px; cursor: pointer; transition: all 0.2s; width: 100%; }
 .zoom-reset:hover { border-color: var(--orange); color: var(--orange); }
 
-/* preset zoom buttons */
-.zoom-presets {
-  display: flex;
-  gap: 4px;
-  width: 100%;
-}
-.zoom-preset-btn {
-  flex: 1;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  padding: 4px 2px;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: center;
-}
-.zoom-preset-btn:hover, .zoom-preset-btn.active {
-  border-color: var(--orange);
-  color: var(--orange);
-  background: rgba(255,106,0,0.1);
-}
-
-/* ══════════════════════════════════════════════
-   MODAL
-   ══════════════════════════════════════════════ */
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  background: rgba(0,0,0,0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.modal-box {
-  background: var(--card2);
-  border: 1px solid var(--border-bright);
-  border-radius: 14px;
-  width: 100%;
-  max-width: 560px;
-  max-height: 85vh;
-  overflow-y: auto;
-  animation: slideUp 0.25s ease;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 40px rgba(255,106,0,0.15);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
+.modal-backdrop { position: fixed; inset: 0; z-index: 100000; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); animation: fadeIn 0.2s ease; }
+.modal-box { background: var(--card2); border: 1px solid var(--border-bright); border-radius: 14px; width: 100%; max-width: 560px; max-height: 85vh; overflow-y: auto; animation: slideUp 0.25s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 40px rgba(255,106,0,0.15); scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 .modal-box::-webkit-scrollbar { width: 4px; }
 .modal-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  background: var(--card2);
-  z-index: 1;
-}
-
-.modal-title-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.modal-icon {
-  width: 48px; height: 48px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 6px var(--orange));
-}
-
-.modal-title {
-  font-family: var(--font-head);
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--text);
-}
-
-.modal-subtitle {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--orange);
-  letter-spacing: 1px;
-  margin-top: 2px;
-}
-
-.modal-close {
-  width: 32px; height: 32px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-dim);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card2); z-index: 1; }
+.modal-title-group { display: flex; align-items: center; gap: 12px; }
+.modal-icon { width: 48px; height: 48px; object-fit: contain; filter: drop-shadow(0 0 6px var(--orange)); }
+.modal-title { font-family: var(--font-head); font-size: 1.15rem; font-weight: 700; letter-spacing: 1px; color: var(--text); }
+.modal-subtitle { font-family: var(--font-mono); font-size: 0.65rem; color: var(--orange); letter-spacing: 1px; margin-top: 2px; }
+.modal-close { width: 32px; height: 32px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; flex-shrink: 0; }
 .modal-close:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
-
 .modal-body { padding: 16px 20px 20px; }
-
-.modal-desc {
-  background: rgba(255,106,0,0.06);
-  border-left: 3px solid var(--orange);
-  border-radius: 0 6px 6px 0;
-  padding: 10px 14px;
-  margin-bottom: 16px;
-}
-
-.modal-desc p {
-  font-family: var(--font-body);
-  font-size: 0.88rem;
-  color: var(--text-dim);
-  line-height: 1.7;
-}
-
-.modal-section-title {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--orange);
-  letter-spacing: 2px;
-  margin-bottom: 10px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid rgba(255,106,0,0.2);
-}
-
-.modal-params {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.modal-param {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--blue);
-  background: rgba(0,170,255,0.08);
-  border: 1px solid rgba(0,170,255,0.25);
-  padding: 3px 10px;
-  border-radius: 20px;
-  letter-spacing: 0.5px;
-}
-
+.modal-desc { background: rgba(255,106,0,0.06); border-left: 3px solid var(--orange); border-radius: 0 6px 6px 0; padding: 10px 14px; margin-bottom: 16px; }
+.modal-desc p { font-family: var(--font-body); font-size: 0.88rem; color: var(--text-dim); line-height: 1.7; }
+.modal-section-title { font-family: var(--font-mono); font-size: 0.95rem; color: var(--orange); letter-spacing: 2px; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,106,0,0.2); }
+.modal-params { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.modal-param { font-family: var(--font-mono); font-size: 0.72rem; color: var(--blue); background: rgba(0,170,255,0.08); border: 1px solid rgba(0,170,255,0.25); padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px; }
 .modal-examples { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-
-.modal-example-btn {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-.modal-example-btn:hover {
-  border-color: var(--orange);
-  background: rgba(255,106,0,0.08);
-  transform: translateX(3px);
-}
-
-.modal-example-icon {
-  color: var(--orange);
-  font-size: 0.78rem;
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-}
-
-.modal-example-text {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: #ccc;
-  line-height: 1.5;
-  flex: 1;
-}
-
-.modal-example-send {
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  color: var(--text-dimmer);
-  flex-shrink: 0;
-  transition: color 0.2s;
-}
+.modal-example-btn { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 10px; width: 100%; }
+.modal-example-btn:hover { border-color: var(--orange); background: rgba(255,106,0,0.08); transform: translateX(3px); }
+.modal-example-icon { color: var(--orange); font-size: 0.78rem; flex-shrink: 0; font-family: var(--font-mono); }
+.modal-example-text { font-family: var(--font-mono); font-size: 0.78rem; color: #ccc; line-height: 1.5; flex: 1; }
+.modal-example-send { font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-dimmer); flex-shrink: 0; transition: color 0.2s; }
 .modal-example-btn:hover .modal-example-send { color: var(--orange); }
-
-.modal-footer {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  margin-top: 4px;
-}
-
-.modal-input {
-  flex: 1;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 8px 12px;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
+.modal-footer { display: flex; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 4px; }
+.modal-input { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; color: var(--text); font-family: var(--font-mono); font-size: 0.78rem; outline: none; transition: border-color 0.2s; }
 .modal-input:focus { border-color: var(--border-bright); }
-
-.modal-send-btn {
-  background: var(--orange);
-  border: none;
-  color: #000;
-  font-family: var(--font-head);
-  font-weight: 700;
-  font-size: 0.78rem;
-  letter-spacing: 1px;
-  padding: 8px 16px;
-  border-radius: 7px;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
+.modal-send-btn { background: var(--orange); border: none; color: #000; font-family: var(--font-head); font-weight: 700; font-size: 0.78rem; letter-spacing: 1px; padding: 8px 16px; border-radius: 7px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
 .modal-send-btn:hover { background: var(--orange2); box-shadow: 0 0 12px rgba(255,106,0,0.4); }
 
-/* ── RESPONSIVE ── */
 * { max-width: 100%; }
 img, video, canvas { max-width: 100%; height: auto; }
-
 @media (max-width: 480px) {
   html { --base-font: 15px; }
   header { padding: 0 8px; height: 52px; overflow: visible; }
@@ -1223,7 +304,7 @@ img, video, canvas { max-width: 100%; height: auto; }
   .header-left { gap: 5px; }
   .status-badge { font-size: 0.55rem; padding: 2px 4px; letter-spacing: 0; gap: 3px; }
   .status-dot { width: 5px; height: 5px; }
-  .user-badge { font-size: 0.55rem; padding: 2px 4px; letter-spacing: 0; }
+  .user-badge, .quota-badge { font-size: 0.55rem; padding: 2px 4px; letter-spacing: 0; }
   .icon-btn, .unit-btn, .history-btn { width: 28px; height: 28px; font-size: 11px; }
   .header-right { gap: 4px; }
   .corner-tl, .corner-tr { top: 56px; }
@@ -1233,7 +314,6 @@ img, video, canvas { max-width: 100%; height: auto; }
   .bot-card { max-width: 96%; }
   .quick-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
   .quick-btn { padding: 9px 8px; font-size: 0.82rem; gap: 6px; }
-  .quick-btn .qicon { font-size: 0.9rem; }
   #welcome { padding: 16px 8px; }
   .welcome-title { font-size: 1.4rem; letter-spacing: 2px; }
   .welcome-logo { height: 60px; }
@@ -1247,10 +327,7 @@ img, video, canvas { max-width: 100%; height: auto; }
   .zoom-fab { bottom: 80px; right: 8px; width: 40px; height: 40px; font-size: 16px; }
   .zoom-controls { bottom: 128px; right: 4px; width: 180px; }
   .modal-box { max-width: 100%; border-radius: 12px; }
-  .modal-title { font-size: 1rem; }
-  .modal-icon { width: 38px; height: 38px; }
 }
-
 @media (min-width: 481px) and (max-width: 600px) {
   html { --base-font: 15.5px; }
   header { padding: 0 10px; height: 54px; overflow: visible; }
@@ -1260,41 +337,107 @@ img, video, canvas { max-width: 100%; height: auto; }
   .corner-tl, .corner-tr { top: 58px; }
   .corner-bl, .corner-br { bottom: 62px; }
   #chat { padding: 12px; }
-  .message { max-width: 90%; padding: 10px 12px; }
+  .message { max-width: 90%; }
   .bot-card { max-width: 95%; }
   .quick-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
-  .quick-btn { padding: 10px 10px; font-size: 0.88rem; }
   #welcome { padding: 20px 10px; }
   .welcome-title { font-size: 1.55rem; }
   .welcome-logo { height: 70px; }
   .input-area { padding: 10px 12px; }
-  .input-inner { padding: 5px 5px 5px 12px; gap: 6px; }
-  .send-btn { padding: 8px 14px; font-size: 0.72rem; }
-  .zoom-fab { bottom: 80px; right: 8px; }
-  .zoom-controls { right: 4px; width: 185px; }
-  .history-panel { top: 54px; right: 0; left: 0; width: 100%; max-height: 55vh; border-radius: 0 0 12px 12px; }
-  .unit-panel { top: 54px; right: 0; left: 0; width: 100%; border-radius: 0 0 12px 12px; }
+  .history-panel, .unit-panel { top: 54px; right: 0; left: 0; width: 100%; max-height: 55vh; border-radius: 0 0 12px 12px; }
 }
-
 @media (min-width: 601px) and (max-width: 900px) {
   .quick-grid { grid-template-columns: repeat(3, 1fr); }
   .message { max-width: 82%; }
   .bot-card { max-width: 88%; }
   header { padding: 0 16px; }
 }
-
-/* iOS safe area */
 .input-area { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
 header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
-
-/* Touch targets */
 @media (hover: none) and (pointer: coarse) {
   .quick-btn { min-height: 48px; }
   .send-btn, .voice-btn, .icon-btn, .unit-btn, .history-btn { min-height: 40px; min-width: 40px; }
   .history-item { min-height: 48px; }
   .modal-example-btn { min-height: 52px; }
   .zoom-fab { min-height: 48px; min-width: 48px; }
-  .zoom-minus, .zoom-plus { min-height: 44px; min-width: 44px; }
+}
+
+/* ── TOKEN USAGE BADGE ── */
+.token-badge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  padding: 3px 8px;
+  border-radius: 3px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: var(--green);
+  background: rgba(0,255,136,0.06);
+  border: 1px solid rgba(0,255,136,0.2);
+}
+.token-badge.token-warn { color: #ffaa00; background: rgba(255,170,0,0.08); border-color: rgba(255,170,0,0.35); animation: pulse-warn 1.5s ease-in-out infinite; }
+.token-badge.token-critical { color: var(--red); background: rgba(255,51,51,0.1); border-color: rgba(255,51,51,0.4); animation: pulse-red 0.8s ease-in-out infinite; }
+
+/* ── TOKEN PANEL ── */
+.token-panel {
+  position: fixed;
+  top: 64px;
+  left: 8px;
+  z-index: 99999;
+  background: var(--card2);
+  border: 1px solid var(--border-bright);
+  border-radius: 12px;
+  width: 300px;
+  display: none;
+  animation: fadeUp 0.2s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+  overflow: hidden;
+}
+.token-panel.open { display: block; }
+.token-panel-header {
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--orange);
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.token-panel-body { padding: 12px 14px; }
+.token-service { margin-bottom: 12px; }
+.token-service:last-child { margin-bottom: 0; }
+.token-service-name { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-dimmer); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+.token-bar-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.token-bar-track { flex: 1; height: 6px; background: var(--card); border-radius: 3px; overflow: hidden; border: 0.5px solid var(--border); }
+.token-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.tb-ok       { background: var(--green); }
+.tb-warn     { background: #ffaa00; }
+.tb-critical { background: var(--red); }
+.token-bar-pct { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-dim); min-width: 32px; text-align: right; }
+.token-detail { font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-dimmer); line-height: 1.7; }
+.token-detail span { color: var(--text-dim); }
+.token-limit-note { font-family: var(--font-mono); font-size: 0.55rem; color: var(--text-dimmer); margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--border); line-height: 1.6; }
+.token-alert-banner {
+  margin: 0;
+  padding: 8px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+  border-top: 0.5px solid var(--border);
+}
+.tab-warn     { background: rgba(255,170,0,0.1);  color: #ffaa00; }
+.tab-critical { background: rgba(255,51,51,0.1);  color: var(--red); }
+@media (max-width: 480px) {
+  .token-panel { left: 0; right: 0; width: 100%; border-radius: 0 0 12px 12px; top: 52px; }
+  .token-badge { font-size: 0.55rem; padding: 2px 4px; }
 }
 </style>
 </head>
@@ -1303,33 +446,20 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
 <canvas id="bg-canvas"></canvas>
 <div class="grid-overlay"></div>
 <div class="vignette"></div>
-
 <div class="corner-tl"></div>
 <div class="corner-tr"></div>
 <div class="corner-bl"></div>
 <div class="corner-br"></div>
 
-<!-- ══ ZOOM FAB ══ -->
 <button class="zoom-fab" id="zoomFab" onclick="toggleZoomPanel()" title="ปรับขนาดตัวอักษร / ซูม">🔍</button>
-
-<!-- ══ ZOOM CONTROLS ══ -->
 <div class="zoom-controls" id="zoomControls">
   <div class="zoom-title">◈ ปรับขนาด UI / ซูม</div>
   <div class="zoom-row">
-    <button class="zoom-minus" onclick="adjustZoom(-0.05)" title="เล็กลง">−</button>
+    <button class="zoom-minus" onclick="adjustZoom(-0.05)">−</button>
     <span class="zoom-val" id="zoomVal">100%</span>
-    <button class="zoom-plus"  onclick="adjustZoom(+0.05)" title="ใหญ่ขึ้น">+</button>
+    <button class="zoom-plus"  onclick="adjustZoom(+0.05)">+</button>
   </div>
-  <input
-    type="range"
-    class="zoom-slider"
-    id="zoomSlider"
-    min="0.7"
-    max="1.6"
-    step="0.05"
-    value="1"
-    oninput="setZoom(parseFloat(this.value))"
-  >
+  <input type="range" class="zoom-slider" id="zoomSlider" min="0.7" max="1.6" step="0.05" value="1" oninput="setZoom(parseFloat(this.value))">
   <div class="zoom-presets">
     <button class="zoom-preset-btn" onclick="setZoom(0.8)"  data-zoom="0.8">80%</button>
     <button class="zoom-preset-btn" onclick="setZoom(1.0)"  data-zoom="1.0">100%</button>
@@ -1342,7 +472,7 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
 <div id="app">
   <header>
     <div class="header-left">
-      <img src="logochim.png" class="logo-img" alt="logo" onerror="this.style.display='none'">
+      <img src="1.png" class="logo-img" alt="logo" onerror="this.style.display='none'">
       <div>
         <div class="header-title"><span> </span> </div>
       </div>
@@ -1350,8 +480,14 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
         <div class="status-dot"></div>
         ONLINE
       </div>
-      <div class="user-badge" id="userBadge" title="Session ID ของคุณ">
-        USR:------
+      <div class="user-badge" id="userBadge" title="Session ID ของคุณ">USR:------</div>
+      <!-- ── QUOTA BADGE ── -->
+      <div class="quota-badge quota-ok" id="quotaBadge" title="จำนวนคำถามที่ใช้ไปแล้ว">
+        Q: 0/50
+      </div>
+      <!-- ── TOKEN BADGE ── -->
+      <div class="token-badge" id="tokenBadge" onclick="toggleTokenPanel()" title="ดู Token Usage">
+        ⚡ TOKEN
       </div>
     </div>
     <div class="header-right">
@@ -1363,7 +499,41 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
     </div>
   </header>
 
-  <!-- History panel -->
+  <!-- ── TOKEN PANEL ── -->
+  <div class="token-panel" id="tokenPanel">
+    <div class="token-panel-header">
+      <span>⚡ API TOKEN USAGE</span>
+      <span style="font-size:0.55rem;color:var(--text-dimmer)">อัปเดตทุก request</span>
+    </div>
+    <div id="tokenAlertBanner"></div>
+    <div class="token-panel-body">
+      <div class="token-service">
+        <div class="token-service-name">🤖 Groq · llama-3.3-70b-versatile</div>
+        <div class="token-bar-wrap">
+          <div class="token-bar-track"><div class="token-bar-fill tb-ok" id="groqBar" style="width:0%"></div></div>
+          <div class="token-bar-pct" id="groqPct">0%</div>
+        </div>
+        <div class="token-detail" id="groqDetail">
+          <span>รอ request แรก...</span>
+        </div>
+      </div>
+      <div class="token-service">
+        <div class="token-service-name">🔷 HuggingFace · multilingual-e5-large</div>
+        <div class="token-bar-wrap">
+          <div class="token-bar-track"><div class="token-bar-fill tb-ok" id="hfBar" style="width:0%"></div></div>
+          <div class="token-bar-pct" id="hfPct">0%</div>
+        </div>
+        <div class="token-detail" id="hfDetail">
+          <span>รอ request แรก...</span>
+        </div>
+      </div>
+      <div class="token-limit-note" id="tokenLimitNote">
+        Groq Free: 6,000 tokens/min · 30 req/min · 500K tokens/day<br>
+        HuggingFace Free: ~10 req/min · cold start สูง
+      </div>
+    </div>
+  </div>
+
   <div class="history-panel" id="historyPanel">
     <div class="history-header">
       <span>HISTORY</span>
@@ -1373,7 +543,6 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
     <div id="historyList"><div class="history-empty">ยังไม่มีประวัติ</div></div>
   </div>
 
-  <!-- Unit converter panel -->
   <div class="unit-panel" id="unitPanel">
     <div class="unit-panel-header">
       <span>⚖ UNIT CONVERTER</span>
@@ -1389,7 +558,6 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
     <div class="unit-content" id="unitContent"></div>
   </div>
 
-  <!-- พื้นที่แชท -->
   <div id="chat">
     <div id="welcome">
       <div class="welcome-logo-wrap">
@@ -1398,241 +566,61 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
       </div>
       <div class="welcome-title">AI API <span>TECH</span> T0.1</div>
       <div class="welcome-sub">ระบบวิเคราะห์และคำนวณเครื่องยนต์อัจฉริยะ</div>
-
       <div class="quick-grid">
-
-        <button class="quick-btn" onclick="openModal('obd')">
-          <img src="obd_icon.png" alt="OBD ECU" style="height:8em;vertical-align:middle;margin-right:15px;">
-          รหัสความผิดปกติ OBD / ECU
-        </button>
-
-        <button class="quick-btn" onclick="openModal('cc')">
-          <img src="Untitled design.png" alt="CC" style="height:8em;vertical-align:middle;margin-right:15px;">
-          คำนวณ CC / รูลูกสูบ / ระยะชัก
-        </button>
-
-        <button class="quick-btn" onclick="openModal('afr')">
-          <img src="AF_icon.png" alt="AFR" style="height:8em;vertical-align:middle;margin-right:5px;">
-          อัตราส่วนอากาศต่อเชื้อเพลิง (AFR)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('staticcr')">
-          <img src="static_cr_icon.png" alt="Static CR" style="height:8em;vertical-align:middle;margin-right:5px;">
-          อัตราส่วนกำลังอัดสถิต (Static CR)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('pistonspeed')">
-          <img src="piston_speed_icon.png" alt="Piston Speed" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ความเร็วลูกสูบเฉลี่ย + ปริมาณอากาศ
-        </button>
-
-        <button class="quick-btn" onclick="openModal('compression')">
-          <img src="cressioompn_pressure_icon.png" alt="Compression" style="height:8em;vertical-align:middle;margin-right:5px;">
-          แรงดันตอนอัด / แรงดันตอนระเบิด
-        </button>
-
-        <button class="quick-btn" onclick="openModal('dynamiccr')">
-          <img src="Dynamic CR Icon.png" alt="Dynamic CR" style="height:8em;vertical-align:middle;margin-right:5px;">
-          กำลังอัดพลวัต (Dynamic CR)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('maintenance')">
-          <img src="Maintenance Schedule Icon.png" alt="Maintenance" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ตารางเช็คระยะ / บำรุงรักษา
-        </button>
-
-        <button class="quick-btn" onclick="openModal('ve')">
-          <img src="VE Icon.png" alt="VE" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ประสิทธิภาพการอัดอากาศ (VE%)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('injector')">
-          <img src="Injector Sizing Icon.png" alt="Injector" style="height:8em;vertical-align:middle;margin-right:5px;">
-          คำนวณขนาดหัวฉีด (Injector Sizing)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('jet')">
-          <img src="Carburetor Jet Size Icon.png" alt="Jet" style="height:8em;vertical-align:middle;margin-right:5px;">
-          คำนวณเมนเจ็ตคาร์บูเรเตอร์
-        </button>
-
-        <button class="quick-btn" onclick="openModal('ignition')">
-          <img src="Ignition Timing.png" alt="Ignition" style="height:8em;vertical-align:middle;margin-right:5px;">
-          องศาจุดระเบิด (Ignition Timing)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('throttle')">
-          <img src="throttle_body_icon.png" alt="Throttle" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ขนาดลิ้นเร่ง (Throttle Body Size)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('hptorque')">
-          <img src="hp_torque_icon.png" alt="HP Torque" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ประเมินแรงม้า / แรงบิด (HP / Torque)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('exhaust')">
-          <img src="exhaust_icon.png" alt="Exhaust" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ขนาดท่อไอเสีย (Exhaust Header)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('intake')">
-          <img src="Exhaust Icon.png" alt="Intake" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ความยาวท่อไอดี (Intake Runner)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('lsa')">
-          <img src="valve_timing_icon.png" alt="LSA" style="height:8em;vertical-align:middle;margin-right:5px;">
-          มุมแยกแคมชาฟต์ (Valve Timing LSA)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('coolant')">
-          <img src="Coolant Icon.png" alt="Coolant" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ระบบหล่อเย็น (Coolant Flow Rate)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('oil')">
-          <img src="oil_icon.png" alt="Oil" style="height:8em;vertical-align:middle;margin-right:5px;">
-          เลือกเกรดน้ำมันเครื่อง (Oil Viscosity)
-        </button>
-
-
-        <button class="quick-btn" onclick="openModal('knock')">
-          <img src="detonation_icon.png" alt="Knock" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ความเสี่ยงน็อค (Detonation Risk)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('rodratio')">
-          <img src="Rod Ratio Icon.png" alt="Rod Ratio" style="height:8em;vertical-align:middle;margin-right:5px;">
-          อัตราส่วนก้านสูบ (Rod Ratio)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('octane')">
-          <img src="Octane Requirement Icon.png" alt="Octane" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ค่าออกเทนที่ต้องการ (Octane Requirement)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('valvespring')">
-          <img src="valve_spring_icon.png" alt="Valve Spring" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ความแข็งสปริงวาล์ว (Valve Spring Rate)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('pw')">
-          <img src="PowerWeight Icon.png" alt="Power/Weight" style="height:8em;vertical-align:middle;margin-right:5px;">
-          อัตราส่วนกำลังต่อน้ำหนัก (Power/Weight)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('gear')">
-          <img src="gear_ratio_icon.png" alt="Gear Ratio" style="height:8em;vertical-align:middle;margin-right:5px;">
-          อัตราทดเกียร์ / สเปรกโซ่ (Gear Ratio)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('springrate')">
-          <img src="spring_rate_icon.png" alt="Spring Rate" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ความแข็งโช้คอัพ (Spring Rate)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('sag')">
-          <img src="sag_setup_icon.png" alt="Sag Setup" style="height:8em;vertical-align:middle;margin-right:5px;">
-          ตั้งค่าระยะยุบโช้ค (Sag Setup)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('rake')">
-          <img src="rake_trail_icon.png" alt="Rake Trail" style="height:8em;vertical-align:middle;margin-right:5px;">
-          มุมคอแกน / ระยะเลื่อน (Rake & Trail)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('swingarm')">
-          <img src="swingarm_icon.png" alt="Swingarm" style="height:7em;vertical-align:middle;margin-right:5px;">
-          ความยาวสวิงอาร์ม (Swingarm)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('brakebias')">
-          <img src="brake_bias_icon.png" alt="Brake Bias" style="height:6em;vertical-align:middle;margin-right:5px;">
-          สัดส่วนแรงเบรก (Brake Bias)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('brakedisc')">
-          <img src="brake_disc_icon.png" alt="Brake Disc" style="height:7em;vertical-align:middle;margin-right:5px;">
-          ขนาดจานเบรก (Brake Disc Size)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('brakingdist')">
-          <img src="braking_distance_icon.png" alt="Braking Distance" style="height:7em;vertical-align:middle;margin-right:5px;">
-          ระยะเบรกหยุด (Braking Distance)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('caliper')">
-          <img src="caliper_icon.png" alt="Caliper" style="height:7em;vertical-align:middle;margin-right:5px;">
-          ขนาดลูกสูบคาลิปเปอร์ (Caliper)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('charging')">
-          <img src="charging_voltage_icon.png" alt="Charging Voltage" style="height:7em;vertical-align:middle;margin-right:5px;">
-          วิเคราะห์แรงดันชาร์จ (Charging Voltage)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('stator')">
-          <img src="stator_output_icon.png" alt="Stator" style="height:7em;vertical-align:middle;margin-right:5px;">
-          กำลังไฟ Stator Output
-        </button>
-
-        <button class="quick-btn" onclick="openModal('fuse')">
-          <img src="fuse_icon.png" alt="Fuse" style="height:7em;vertical-align:middle;margin-right:5px;">
-          ขนาดฟิวส์ (Fuse Rating)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('cca')">
-          <img src="cca_icon.png" alt="CCA" style="height:7em;vertical-align:middle;margin-right:5px;">
-          ความสามารถสตาร์ทเย็น (Battery CCA)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('loadindex')">
-          <img src="load_index_icon.png" alt="Load Index" style="height:7em;vertical-align:middle;margin-right:5px;">
-          ดัชนีรับน้ำหนักยาง (Load Index)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('circumference')">
-          <img src="circumference_icon.png" alt="Circumference" style="height:7em;vertical-align:middle;margin-right:5px;">
-          เส้นรอบวงยาง (Rolling Circumference)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('speedo')">
-          <img src="speedo_error_icon.png" alt="Speedo Error" style="height:7em;vertical-align:middle;margin-right:5px;">
-          ความคลาดเคลื่อนมาตรวัด (Speedo Error)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('tirepressure')">
-          <img src="tire_pressure_icon.png" alt="Tire Pressure" style="height:7em;vertical-align:middle;margin-right:5px;">
-          แรงดันลมยางตามน้ำหนัก (Tire Pressure)
-        </button>
-
-        <button class="quick-btn" onclick="openModal('rimwidth')">
-          <img src="rim_width_icon.png.png" alt="Rim Width" style="height:7em;vertical-align:middle;margin-right:5px;">
-          ความกว้างวงล้อที่รองรับ (Rim Width)
-        </button>
-
+        <button class="quick-btn" onclick="openModal('obd')"><img src="all icon/obd_icon.png" alt="OBD ECU" style="height:8em;vertical-align:middle;margin-right:15px;">รหัสความผิดปกติ OBD / ECU</button>
+        <button class="quick-btn" onclick="openModal('cc')"><img src="all icon/Untitled design.png" alt="CC" style="height:8em;vertical-align:middle;margin-right:15px;">คำนวณ CC / รูลูกสูบ / ระยะชัก</button>
+        <button class="quick-btn" onclick="openModal('afr')"><img src="all icon/AF_icon.png" alt="AFR" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนอากาศต่อเชื้อเพลิง (AFR)</button>
+        <button class="quick-btn" onclick="openModal('staticcr')"><img src="all icon/static_cr_icon.png" alt="Static CR" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนกำลังอัดสถิต (Static CR)</button>
+        <button class="quick-btn" onclick="openModal('pistonspeed')"><img src="all icon/piston_speed_icon.png" alt="Piston Speed" style="height:8em;vertical-align:middle;margin-right:5px;">ความเร็วลูกสูบเฉลี่ย + ปริมาณอากาศ</button>
+        <button class="quick-btn" onclick="openModal('compression')"><img src="all icon/cressioompn_pressure_icon.png" alt="Compression" style="height:8em;vertical-align:middle;margin-right:5px;">แรงดันตอนอัด / แรงดันตอนระเบิด</button>
+        <button class="quick-btn" onclick="openModal('dynamiccr')"><img src="all icon/Dynamic CR Icon.png" alt="Dynamic CR" style="height:8em;vertical-align:middle;margin-right:5px;">กำลังอัดพลวัต (Dynamic CR)</button>
+        <button class="quick-btn" onclick="openModal('maintenance')"><img src="all icon/Maintenance Schedule Icon.png" alt="Maintenance" style="height:8em;vertical-align:middle;margin-right:5px;">ตารางเช็คระยะ / บำรุงรักษา</button>
+        <button class="quick-btn" onclick="openModal('ve')"><img src="all icon/VE Icon.png" alt="VE" style="height:8em;vertical-align:middle;margin-right:5px;">ประสิทธิภาพการอัดอากาศ (VE%)</button>
+        <button class="quick-btn" onclick="openModal('injector')"><img src="all icon/Injector Sizing Icon.png" alt="Injector" style="height:8em;vertical-align:middle;margin-right:5px;">คำนวณขนาดหัวฉีด (Injector Sizing)</button>
+        <button class="quick-btn" onclick="openModal('jet')"><img src="all icon/Carburetor Jet Size Icon.png" alt="Jet" style="height:8em;vertical-align:middle;margin-right:5px;">คำนวณเมนเจ็ตคาร์บูเรเตอร์</button>
+        <button class="quick-btn" onclick="openModal('ignition')"><img src="all icon/Ignition Timing.png" alt="Ignition" style="height:8em;vertical-align:middle;margin-right:5px;">องศาจุดระเบิด (Ignition Timing)</button>
+        <button class="quick-btn" onclick="openModal('throttle')"><img src="all icon/throttle_body_icon.png" alt="Throttle" style="height:8em;vertical-align:middle;margin-right:5px;">ขนาดลิ้นเร่ง (Throttle Body Size)</button>
+        <button class="quick-btn" onclick="openModal('hptorque')"><img src="all icon/hp_torque_icon.png" alt="HP Torque" style="height:8em;vertical-align:middle;margin-right:5px;">ประเมินแรงม้า / แรงบิด (HP / Torque)</button>
+        <button class="quick-btn" onclick="openModal('exhaust')"><img src="all icon/exhaust_icon.png" alt="Exhaust" style="height:8em;vertical-align:middle;margin-right:5px;">ขนาดท่อไอเสีย (Exhaust Header)</button>
+        <button class="quick-btn" onclick="openModal('intake')"><img src="all icon/Exhaust Icon.png" alt="Intake" style="height:8em;vertical-align:middle;margin-right:5px;">ความยาวท่อไอดี (Intake Runner)</button>
+        <button class="quick-btn" onclick="openModal('lsa')"><img src="all icon/valve_timing_icon.png" alt="LSA" style="height:8em;vertical-align:middle;margin-right:5px;">มุมแยกแคมชาฟต์ (Valve Timing LSA)</button>
+        <button class="quick-btn" onclick="openModal('coolant')"><img src="all icon/Coolant Icon.png" alt="Coolant" style="height:8em;vertical-align:middle;margin-right:5px;">ระบบหล่อเย็น (Coolant Flow Rate)</button>
+        <button class="quick-btn" onclick="openModal('oil')"><img src="all icon/oil_icon.png" alt="Oil" style="height:8em;vertical-align:middle;margin-right:5px;">เลือกเกรดน้ำมันเครื่อง (Oil Viscosity)</button>
+        <button class="quick-btn" onclick="openModal('knock')"><img src="all icon/detonation_icon.png" alt="Knock" style="height:8em;vertical-align:middle;margin-right:5px;">ความเสี่ยงน็อค (Detonation Risk)</button>
+        <button class="quick-btn" onclick="openModal('rodratio')"><img src="all icon/Rod Ratio Icon.png" alt="Rod Ratio" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนก้านสูบ (Rod Ratio)</button>
+        <button class="quick-btn" onclick="openModal('octane')"><img src="all icon/Octane Requirement Icon.png" alt="Octane" style="height:8em;vertical-align:middle;margin-right:5px;">ค่าออกเทนที่ต้องการ (Octane Requirement)</button>
+        <button class="quick-btn" onclick="openModal('valvespring')"><img src="all icon/valve_spring_icon.png" alt="Valve Spring" style="height:8em;vertical-align:middle;margin-right:5px;">ความแข็งสปริงวาล์ว (Valve Spring Rate)</button>
+        <button class="quick-btn" onclick="openModal('pw')"><img src="all icon/PowerWeight Icon.png" alt="Power/Weight" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนกำลังต่อน้ำหนัก (Power/Weight)</button>
+        <button class="quick-btn" onclick="openModal('gear')"><img src="all icon/gear_ratio_icon.png" alt="Gear Ratio" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราทดเกียร์ / สเปรกโซ่ (Gear Ratio)</button>
+        <button class="quick-btn" onclick="openModal('springrate')"><img src="all icon/spring_rate_icon.png" alt="Spring Rate" style="height:8em;vertical-align:middle;margin-right:5px;">ความแข็งโช้คอัพ (Spring Rate)</button>
+        <button class="quick-btn" onclick="openModal('sag')"><img src="all icon/sag_setup_icon.png" alt="Sag Setup" style="height:8em;vertical-align:middle;margin-right:5px;">ตั้งค่าระยะยุบโช้ค (Sag Setup)</button>
+        <button class="quick-btn" onclick="openModal('rake')"><img src="all icon/rake_trail_icon.png" alt="Rake Trail" style="height:8em;vertical-align:middle;margin-right:5px;">มุมคอแกน / ระยะเลื่อน (Rake &amp; Trail)</button>
+        <button class="quick-btn" onclick="openModal('swingarm')"><img src="all icon/swingarm_icon.png" alt="Swingarm" style="height:7em;vertical-align:middle;margin-right:5px;">ความยาวสวิงอาร์ม (Swingarm)</button>
+        <button class="quick-btn" onclick="openModal('brakebias')"><img src="all icon/brake_bias_icon.png" alt="Brake Bias" style="height:6em;vertical-align:middle;margin-right:5px;">สัดส่วนแรงเบรก (Brake Bias)</button>
+        <button class="quick-btn" onclick="openModal('brakedisc')"><img src="all icon/brake_disc_icon.png" alt="Brake Disc" style="height:7em;vertical-align:middle;margin-right:5px;">ขนาดจานเบรก (Brake Disc Size)</button>
+        <button class="quick-btn" onclick="openModal('brakingdist')"><img src="all icon/braking_distance_icon.png" alt="Braking Distance" style="height:7em;vertical-align:middle;margin-right:5px;">ระยะเบรกหยุด (Braking Distance)</button>
+        <button class="quick-btn" onclick="openModal('caliper')"><img src="all icon/caliper_icon.png" alt="Caliper" style="height:7em;vertical-align:middle;margin-right:5px;">ขนาดลูกสูบคาลิปเปอร์ (Caliper)</button>
+        <button class="quick-btn" onclick="openModal('charging')"><img src="all icon/charging_voltage_icon.png" alt="Charging Voltage" style="height:7em;vertical-align:middle;margin-right:5px;">วิเคราะห์แรงดันชาร์จ (Charging Voltage)</button>
+        <button class="quick-btn" onclick="openModal('stator')"><img src="all icon/stator_output_icon.png" alt="Stator" style="height:7em;vertical-align:middle;margin-right:5px;">กำลังไฟ Stator Output</button>
+        <button class="quick-btn" onclick="openModal('fuse')"><img src="all icon/fuse_icon.png" alt="Fuse" style="height:7em;vertical-align:middle;margin-right:5px;">ขนาดฟิวส์ (Fuse Rating)</button>
+        <button class="quick-btn" onclick="openModal('cca')"><img src="all icon/cca_icon.png" alt="CCA" style="height:7em;vertical-align:middle;margin-right:5px;">ความสามารถสตาร์ทเย็น (Battery CCA)</button>
+        <button class="quick-btn" onclick="openModal('loadindex')"><img src="all icon/load_index_icon.png" alt="Load Index" style="height:7em;vertical-align:middle;margin-right:5px;">ดัชนีรับน้ำหนักยาง (Load Index)</button>
+        <button class="quick-btn" onclick="openModal('circumference')"><img src="all icon/circumference_icon.png" alt="Circumference" style="height:7em;vertical-align:middle;margin-right:5px;">เส้นรอบวงยาง (Rolling Circumference)</button>
+        <button class="quick-btn" onclick="openModal('speedo')"><img src="all icon/speedo_error_icon.png" alt="Speedo Error" style="height:7em;vertical-align:middle;margin-right:5px;">ความคลาดเคลื่อนมาตรวัด (Speedo Error)</button>
+        <button class="quick-btn" onclick="openModal('tirepressure')"><img src="all icon/tire_pressure_icon.png" alt="Tire Pressure" style="height:7em;vertical-align:middle;margin-right:5px;">แรงดันลมยางตามน้ำหนัก (Tire Pressure)</button>
+        <button class="quick-btn" onclick="openModal('rimwidth')"><img src="all icon/rim_width_icon.png.png" alt="Rim Width" style="height:7em;vertical-align:middle;margin-right:5px;">ความกว้างวงล้อที่รองรับ (Rim Width)</button>
       </div>
     </div>
   </div>
 
-  <!-- Input area -->
   <div class="input-area">
     <div class="input-inner">
       <span class="input-prefix">»</span>
-      <input
-        type="text"
-        id="messageInput"
-        placeholder="พิมพ์คำถามหรือค่าที่ต้องการคำนวณ..."
-        onkeypress="if(event.key==='Enter')sendMessage()"
-        oninput="updateCharCount(this)"
-        maxlength="500"
-        autocomplete="off"
-      >
+      <input type="text" id="messageInput" placeholder="พิมพ์คำถามหรือค่าที่ต้องการคำนวณ..." onkeypress="if(event.key==='Enter' && !isSending)sendMessage()" oninput="updateCharCount(this)" maxlength="500" autocomplete="off">
       <span class="voice-status" id="voiceStatus">REC</span>
       <span class="char-count" id="charCount"></span>
       <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="พูดค่าเลย">🎙️</button>
-      <button class="send-btn" onclick="sendMessage()">SEND</button>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">SEND</button>
     </div>
   </div>
 </div>
@@ -1640,1159 +628,656 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
 <div class="share-toast" id="shareToast">COPIED TO CLIPBOARD</div>
 
 <script>
-/* ══════════════════════════════════════════════
-   ZOOM SYSTEM
-   ══════════════════════════════════════════════ */
+/* ══ ZOOM ══ */
 const ZOOM_KEY = 'apitech_zoom';
 let currentZoom = 1.0;
+function initZoom() { const s=parseFloat(localStorage.getItem(ZOOM_KEY)||'1.0'); setZoom(isNaN(s)?1.0:s,false); }
+function setZoom(val,save=true) { val=Math.min(1.6,Math.max(0.7,val));currentZoom=val;document.documentElement.style.setProperty('--zoom',val);const d=Math.round(val*100)+'%';const v=document.getElementById('zoomVal');const sl=document.getElementById('zoomSlider');if(v)v.textContent=d;if(sl)sl.value=val;document.querySelectorAll('.zoom-preset-btn').forEach(b=>{b.classList.toggle('active',Math.abs(parseFloat(b.getAttribute('data-zoom'))-val)<0.01);});if(save){try{localStorage.setItem(ZOOM_KEY,val);}catch(e){}} }
+function adjustZoom(d){setZoom(currentZoom+d);}
+function toggleZoomPanel(){const p=document.getElementById('zoomControls');const f=document.getElementById('zoomFab');if(!p)return;const o=p.classList.toggle('open');f.classList.toggle('active',o);if(o){document.getElementById('historyPanel')?.classList.remove('open');document.getElementById('unitPanel')?.classList.remove('open');}}
+(function(){let sd=0,sz=1;document.addEventListener('touchstart',e=>{if(e.touches.length===2){sd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);sz=currentZoom;}},{passive:true});document.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);setZoom(sz*d/sd);}},{passive:true});})();
 
-function initZoom() {
-  const saved = parseFloat(localStorage.getItem(ZOOM_KEY) || '1.0');
-  setZoom(isNaN(saved) ? 1.0 : saved, false);
-}
+/* ══ STORAGE FALLBACK ══ */
+const storage=(function(){try{const t='__t__';localStorage.setItem(t,t);localStorage.removeItem(t);return{_m:{},getItem(k){try{return localStorage.getItem(k);}catch(e){return this._m[k]||null;}},setItem(k,v){try{localStorage.setItem(k,v);}catch(e){this._m[k]=v;}},removeItem(k){try{localStorage.removeItem(k);}catch(e){delete this._m[k];}}};}catch(e){const m={};return{_m:m,getItem(k){return m[k]||null;},setItem(k,v){m[k]=v;},removeItem(k){delete m[k];}};} })();
 
-function setZoom(val, save = true) {
-  val = Math.min(1.6, Math.max(0.7, val));
-  currentZoom = val;
-  document.documentElement.style.setProperty('--zoom', val);
-  // อัปเดต UI
-  const display = Math.round(val * 100) + '%';
-  const valEl = document.getElementById('zoomVal');
-  const slider = document.getElementById('zoomSlider');
-  if (valEl) valEl.textContent = display;
-  if (slider) slider.value = val;
-  // อัปเดต preset buttons
-  document.querySelectorAll('.zoom-preset-btn').forEach(btn => {
-    const bv = parseFloat(btn.getAttribute('data-zoom'));
-    btn.classList.toggle('active', Math.abs(bv - val) < 0.01);
-  });
-  if (save) {
-    try { localStorage.setItem(ZOOM_KEY, val); } catch(e) {}
-  }
-}
+/* ══ USER ID ══ */
+const USER_ID_KEY='apitech_userid';
+function generateUUID(){if(typeof crypto!=='undefined'&&crypto.randomUUID)return crypto.randomUUID();return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8);return v.toString(16);});}
+function initUser(){let u=storage.getItem(USER_ID_KEY);if(!u){u=generateUUID();storage.setItem(USER_ID_KEY,u);}return u;}
+const userId=initUser();
+const shortId=userId.replace(/-/g,'').slice(0,6).toUpperCase();
+const HISTORY_KEY='apitech_history_'+userId;
 
-function adjustZoom(delta) {
-  setZoom(currentZoom + delta);
-}
+/* ══════════════════════════════════════════════
+   QUOTA SYSTEM — 50 คำถามต่อ userId
+   ══════════════════════════════════════════════ */
+// ══════════════════════════════════════════════
+// TOKEN & REQUEST LIMIT SYSTEM
+// 30 requests / 25,000 tokens per 5-hour window
+// ══════════════════════════════════════════════
+const REQ_LIMIT     = 30;
+const TOKEN_LIMIT   = 25000;
+const WINDOW_MS     = 5 * 60 * 60 * 1000;  // 5 ชั่วโมง
+const USAGE_KEY     = 'apitech_usage_' + userId;
+const QUOTA_LIMIT   = REQ_LIMIT;   // backward compat
+const QUOTA_KEY     = USAGE_KEY;   // backward compat
 
-function toggleZoomPanel() {
-  const panel = document.getElementById('zoomControls');
-  const fab   = document.getElementById('zoomFab');
-  if (!panel) return;
-  const isOpen = panel.classList.toggle('open');
-  fab.classList.toggle('active', isOpen);
-  // ปิด panels อื่น
-  if (isOpen) {
-    document.getElementById('historyPanel')?.classList.remove('open');
-    document.getElementById('unitPanel')?.classList.remove('open');
-  }
-}
-
-/* pinch-to-zoom บน mobile */
-(function() {
-  let startDist = 0;
-  let startZoom = 1;
-  document.addEventListener('touchstart', e => {
-    if (e.touches.length === 2) {
-      startDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      startZoom = currentZoom;
-    }
-  }, { passive: true });
-  document.addEventListener('touchmove', e => {
-    if (e.touches.length === 2) {
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      const ratio = dist / startDist;
-      setZoom(startZoom * ratio);
-    }
-  }, { passive: true });
-})();
-
-/* ── localStorage fallback ── */
-const storage = (function() {
+// ── getUsage: ดึง usage state ──
+function getUsage() {
   try {
-    const t = '__test__';
-    localStorage.setItem(t, t);
-    localStorage.removeItem(t);
-    return {
-      _mem: {},
-      getItem(k)    { try { return localStorage.getItem(k); }    catch(e) { return this._mem[k] || null; } },
-      setItem(k, v) { try { localStorage.setItem(k, v); }        catch(e) { this._mem[k] = v; } },
-      removeItem(k) { try { localStorage.removeItem(k); }        catch(e) { delete this._mem[k]; } }
-    };
-  } catch(e) {
-    const mem = {};
-    return { _mem: mem, getItem(k) { return mem[k]||null; }, setItem(k,v) { mem[k]=v; }, removeItem(k) { delete mem[k]; } };
+    const raw = storage.getItem(USAGE_KEY);
+    const u = raw ? JSON.parse(raw) : null;
+    if (!u) return freshUsage();
+    // ตรวจว่า window หมดอายุหรือยัง
+    const age = Date.now() - (u.windowStart || 0);
+    if (age >= WINDOW_MS) {
+      const fresh = freshUsage();
+      saveUsage(fresh);
+      return fresh;
+    }
+    return u;
+  } catch(e) { return freshUsage(); }
+}
+
+function freshUsage() {
+  return { reqCount: 0, tokenUsed: 0, windowStart: Date.now() };
+}
+
+function saveUsage(u) {
+  try { storage.setItem(USAGE_KEY, JSON.stringify(u)); } catch(e) {}
+}
+
+// backward compat alias
+function getQuota() {
+  const u = getUsage();
+  return { count: u.reqCount, ...u };
+}
+
+function getTodayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function incrementUsage(tokensUsed) {
+  const u = getUsage();
+  u.reqCount++;
+  u.tokenUsed += (tokensUsed || 0);
+  saveUsage(u);
+  renderQuotaBadge(u);
+  return u;
+}
+
+// backward compat
+function incrementQuota() {
+  return incrementUsage(0).reqCount;
+}
+
+// ── resetInMin: คำนวณเวลาที่เหลือก่อน reset ──
+function getResetMin() {
+  const u = getUsage();
+  const resetAt = (u.windowStart || Date.now()) + WINDOW_MS;
+  return Math.max(0, Math.ceil((resetAt - Date.now()) / 60000));
+}
+
+function renderQuotaBadge(usage) {
+  // รับ usage object หรือ number (backward compat)
+  const u = (typeof usage === 'object') ? usage : getUsage();
+  const badge = document.getElementById('quotaBadge');
+  if (!badge) return;
+
+  const reqLeft   = REQ_LIMIT   - u.reqCount;
+  const tokenPct  = Math.round((u.tokenUsed / TOKEN_LIMIT) * 100);
+  const reqPct    = Math.round((u.reqCount  / REQ_LIMIT)   * 100);
+  const maxPct    = Math.max(tokenPct, reqPct);
+  const resetMin  = getResetMin();
+
+  // แสดง: คำถามที่เหลือ / token %
+  badge.textContent = `Q:${u.reqCount}/${REQ_LIMIT} T:${tokenPct}%`;
+
+  badge.classList.remove('quota-ok','quota-warn','quota-near','quota-full');
+  if (maxPct >= 100) {
+    badge.classList.add('quota-full');
+    badge.title = `หมด — รีเซ็ตใน ${resetMin} นาที`;
+  } else if (maxPct >= 90) {
+    badge.classList.add('quota-near');
+    badge.title = `⚠️ เหลือ ${reqLeft} คำถาม · Token ${tokenPct}% · รีเซ็ตใน ${resetMin} นาที`;
+    if (!badge._warned90) { badge._warned90=true; showToast('⚠️ เกือบหมด Token! เหลือ '+reqLeft+' คำถาม', 'warn'); }
+  } else if (maxPct >= 70) {
+    badge.classList.add('quota-warn');
+    badge.title = `เหลือ ${reqLeft} คำถาม · Token ${tokenPct}% · รีเซ็ตใน ${resetMin} นาที`;
+    if (!badge._warned70) { badge._warned70=true; showToast('Token ใช้ไป '+maxPct+'% แล้ว', 'info'); }
+  } else {
+    badge._warned70 = false;
+    badge._warned90 = false;
+    badge.classList.add('quota-ok');
+    badge.title = `เหลือ ${reqLeft} คำถาม · Token ${tokenPct}% · รีเซ็ตใน ${resetMin} นาที`;
   }
-})();
-
-/* ── User ID ── */
-const USER_ID_KEY = 'apitech_userid';
-function generateUUID() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8);
-    return v.toString(16);
-  });
 }
-function initUser() {
-  let uid = storage.getItem(USER_ID_KEY);
-  if (!uid) { uid = generateUUID(); storage.setItem(USER_ID_KEY, uid); }
-  return uid;
-}
-const userId  = initUser();
-const shortId = userId.replace(/-/g,'').slice(0,6).toUpperCase();
-const HISTORY_KEY = 'apitech_history_' + userId;
 
+// ── Toast notification ──
+function showToast(msg, type) {
+  // ลบ toast เดิมถ้ามี
+  const old = document.getElementById('tokenToast');
+  if (old) old.remove();
+
+  const t = document.createElement('div');
+  t.id = 'tokenToast';
+  const bgColor = type === 'warn' ? '#ff6a00' : type === 'error' ? '#ff3333' : '#00aaff';
+  t.style.cssText = `position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+    background:${bgColor};color:#000;font-family:var(--font-mono);font-size:0.72rem;
+    font-weight:700;padding:8px 20px;border-radius:20px;letter-spacing:1px;
+    z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.5);
+    animation:fadeUp 0.3s ease;white-space:nowrap;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { if (t.parentNode) t.remove(); }, 4000);
+}
+
+// ── Countdown timer ที่ badge ──
+let _countdownTimer = null;
+function startCountdown() {
+  if (_countdownTimer) clearInterval(_countdownTimer);
+  _countdownTimer = setInterval(() => {
+    const u = getUsage();
+    renderQuotaBadge(u);
+    // ถ้า window หมดอายุแล้ว (freshUsage จะถูกสร้างใหม่)
+    const age = Date.now() - (u.windowStart || 0);
+    if (age >= WINDOW_MS) {
+      clearInterval(_countdownTimer);
+      // แสดง toast แจ้ง reset
+      const ov = document.getElementById('quotaOverlay');
+      if (ov) { ov.remove(); }
+      // re-enable input
+      const inp = document.getElementById('messageInput');
+      const btn = document.getElementById('sendBtn');
+      if (inp && inp.disabled) { inp.disabled = false; inp.placeholder = 'พิมพ์คำถามหรือค่าที่ต้องการคำนวณ...'; }
+      if (btn && btn.disabled) { btn.disabled = false; }
+      showToast('🔄 Token รีเซ็ตแล้ว! ใช้งานได้อีก 30 คำถาม', 'info');
+      startCountdown(); // start new window
+    }
+  }, 30000); // อัปเดตทุก 30 วินาที
+}
+
+function showQuotaOverlay(resetInMin) {
+  if (document.getElementById('quotaOverlay')) return;
+  const u = getUsage();
+  const rMin = resetInMin || getResetMin();
+  const tokenPct = Math.round((u.tokenUsed / TOKEN_LIMIT) * 100);
+  const isTokenBlock = tokenPct >= 100;
+  const reason = isTokenBlock ? 'TOKEN หมด' : 'คำถามครบ';
+
+  const ov = document.createElement('div');
+  ov.className = 'quota-overlay';
+  ov.id = 'quotaOverlay';
+  ov.innerHTML = `
+    <div class="quota-box">
+      <div class="quota-box-icon">${isTokenBlock ? '⚡' : '⛔'}</div>
+      <div class="quota-box-title">LIMIT REACHED</div>
+      <div class="quota-box-sub">
+        ${isTokenBlock
+          ? 'Token หมดสำหรับรอบนี้แล้ว<br>ระบบจะรีเซ็ตอัตโนมัติเร็วๆ นี้'
+          : 'คุณใช้ครบ 30 คำถามในรอบนี้แล้ว<br>ระบบจะรีเซ็ตอัตโนมัติเร็วๆ นี้'}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;">
+        <div style="background:rgba(255,106,0,0.08);border:1px solid rgba(255,106,0,0.3);border-radius:8px;padding:10px;">
+          <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--text-dimmer);margin-bottom:4px;">คำถาม</div>
+          <div style="font-family:var(--font-mono);font-size:1.3rem;font-weight:700;color:var(--orange);">${u.reqCount}/${REQ_LIMIT}</div>
+        </div>
+        <div style="background:rgba(255,106,0,0.08);border:1px solid rgba(255,106,0,0.3);border-radius:8px;padding:10px;">
+          <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--text-dimmer);margin-bottom:4px;">Token</div>
+          <div style="font-family:var(--font-mono);font-size:1.3rem;font-weight:700;color:var(--orange);">${tokenPct}%</div>
+        </div>
+      </div>
+      <div class="quota-box-label">
+        🔄 รีเซ็ตอัตโนมัติใน <span id="overlayCountdown" style="color:var(--orange);font-weight:700;">${rMin} นาที</span>
+      </div>
+      <div class="quota-box-contact">
+        ระบบรีเซ็ตทุก 5 ชั่วโมง<br>
+        Session: <span style="color:var(--orange)">${shortId}</span>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(ov);
+
+  // Block input
+  const inp = document.getElementById('messageInput');
+  const btn = document.getElementById('sendBtn');
+  if (inp) { inp.disabled = true; inp.placeholder = `${reason} — รีเซ็ตใน ${rMin} นาที`; }
+  if (btn) { btn.disabled = true; }
+
+  // Countdown ใน overlay
+  const countEl = document.getElementById('overlayCountdown');
+  const ovTimer = setInterval(() => {
+    const m = getResetMin();
+    if (countEl) countEl.textContent = m + ' นาที';
+    if (m <= 0) {
+      clearInterval(ovTimer);
+      ov.remove();
+      if (inp) { inp.disabled = false; inp.placeholder = 'พิมพ์คำถามหรือค่าที่ต้องการคำนวณ...'; }
+      if (btn) { btn.disabled = false; }
+      showToast('🔄 รีเซ็ตแล้ว! ใช้งานได้อีก 30 คำถาม', 'info');
+    }
+  }, 30000);
+}
+
+function initQuota() {
+  const u = getUsage();
+  renderQuotaBadge(u);
+  startCountdown();  // เริ่ม timer นับถอยหลัง
+  if (u.reqCount >= REQ_LIMIT || u.tokenUsed >= TOKEN_LIMIT) {
+    setTimeout(() => showQuotaOverlay(), 500);
+  }
+}
+
+/* ══ DOMContentLoaded ══ */
 document.addEventListener('DOMContentLoaded', () => {
   const badge = document.getElementById('userBadge');
-  if (badge) { badge.textContent = 'USR:' + shortId; badge.setAttribute('data-fullid', userId); }
+  if (badge) { badge.textContent='USR:'+shortId; badge.setAttribute('data-fullid',userId); }
   const sessInfo = document.getElementById('historySessionInfo');
-  if (sessInfo) sessInfo.textContent = 'SESSION: ' + shortId + ' · ประวัติของคุณเท่านั้น';
+  if (sessInfo) sessInfo.textContent='SESSION: '+shortId+' · ประวัติของคุณเท่านั้น';
   renderHistory();
-  initZoom(); // ← โหลดค่าซูมที่บันทึกไว้
+  initZoom();
+  initQuota();  // ← โหลด quota
 });
 
-/* ── Background animation ── */
-const canvas = document.getElementById('bg-canvas');
-const ctx    = canvas.getContext('2d');
-let W = canvas.width  = window.innerWidth;
-let H = canvas.height = window.innerHeight;
-window.addEventListener('resize', () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; });
 
-const opts = {
-  len:18,count:25,baseTime:30,addedTime:25,dieChance:.03,spawnChance:.6,
-  sparkChance:.05,sparkDist:6,color:'hsl(hue,100%,light%)',
-  baseLight:50,addedLight:10,shadowToTimePropMult:4,
-  baseLightInputMultiplier:.008,addedLightInputMultiplier:.015,
-  cx:W/2,cy:H/2,repaintAlpha:.03,hueChange:.02,
-};
-let tick=0; const lines=[]; const dieX=W/2/opts.len; const dieY=H/2/opts.len; const baseRad=Math.PI*2/6;
-ctx.fillStyle='black'; ctx.fillRect(0,0,W,H);
-class Line {
-  constructor() { this.reset(); }
-  reset() { this.x=0;this.y=0;this.addedX=0;this.addedY=0;this.rad=0;this.lightInputMultiplier=opts.baseLightInputMultiplier+opts.addedLightInputMultiplier*Math.random();this.color=opts.color.replace('hue',tick*opts.hueChange);this.cumulativeTime=0;this.beginPhase(); }
-  beginPhase() { this.x+=this.addedX;this.y+=this.addedY;this.time=0;this.targetTime=(opts.baseTime+opts.addedTime*Math.random())|0;this.rad+=baseRad*(Math.random()<.5?1:-1);this.addedX=Math.cos(this.rad);this.addedY=Math.sin(this.rad);if(Math.random()<opts.dieChance||this.x>dieX||this.x<-dieX||this.y>dieY||this.y<-dieY)this.reset(); }
-  step() { ++this.time;++this.cumulativeTime;if(this.time>=this.targetTime)this.beginPhase();const prop=this.time/this.targetTime;const wave=Math.sin(prop*Math.PI/2);ctx.shadowBlur=prop*opts.shadowToTimePropMult;ctx.fillStyle=ctx.shadowColor=this.color.replace('light',opts.baseLight+opts.addedLight*Math.sin(this.cumulativeTime*this.lightInputMultiplier));ctx.fillRect(opts.cx+(this.x+wave*this.addedX)*opts.len,opts.cy+(this.y+wave*this.addedY)*opts.len,2,2); }
+/* ══════════════════════════════════════════════
+   TOKEN USAGE SYSTEM
+   ══════════════════════════════════════════════ */
+
+// Groq Free Tier limits
+const GROQ_LIMIT_PER_MIN  = 6000;    // tokens/min
+const GROQ_LIMIT_PER_DAY  = 500000;  // tokens/day
+const GROQ_REQ_PER_MIN    = 30;      // req/min
+
+// HuggingFace Free Tier limits
+const HF_REQ_PER_MIN      = 10;      // req/min
+
+// Sliding window — เก็บ token ที่ใช้ใน 60 วินาทีที่ผ่านมา
+const TOKEN_STORAGE_KEY = 'apitech_tokens_' + userId;
+let tokenHistory = [];  // [{ts, groqTokens, hfEmbed}]
+let totalSessionGroqTokens = 0;
+let totalSessionRequests   = 0;
+let lastTokenData = null;
+
+function loadTokenHistory() {
+  try {
+    const raw = storage.getItem(TOKEN_STORAGE_KEY);
+    if (raw) tokenHistory = JSON.parse(raw);
+  } catch(e) { tokenHistory = []; }
 }
-function loop() { requestAnimationFrame(loop);++tick;opts.cx=W/2;opts.cy=H/2;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.fillStyle='rgba(0,0,0,'+opts.repaintAlpha+')';ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='lighter';if(lines.length<opts.count&&Math.random()<opts.spawnChance)lines.push(new Line());lines.forEach(l=>l.step()); }
+
+function saveTokenHistory() {
+  // เก็บแค่ 5 นาทีย้อนหลัง
+  const cutoff = Date.now() - 5 * 60 * 1000;
+  tokenHistory = tokenHistory.filter(x => x.ts > cutoff);
+  try { storage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(tokenHistory)); } catch(e) {}
+}
+
+function getTokensLastMinute() {
+  const cutoff = Date.now() - 60 * 1000;
+  return tokenHistory
+    .filter(x => x.ts > cutoff)
+    .reduce((sum, x) => sum + (x.groqTokens || 0), 0);
+}
+
+function getReqLastMinute() {
+  const cutoff = Date.now() - 60 * 1000;
+  return tokenHistory.filter(x => x.ts > cutoff).length;
+}
+
+function recordTokenUsage(groqTokens, hfEmbed) {
+  tokenHistory.push({ ts: Date.now(), groqTokens, hfEmbed });
+  totalSessionGroqTokens += groqTokens;
+  totalSessionRequests++;
+  saveTokenHistory();
+}
+
+function updateTokenUI(tokenData) {
+  if (!tokenData) return;
+  lastTokenData = tokenData;
+
+  const groq = tokenData.groq || {};
+  const hf   = tokenData.huggingface || {};
+  const warn = tokenData.warning;
+
+  // คำนวณ usage จริงใน 60 วินาทีที่ผ่านมา (sliding window)
+  const tokensLastMin = getTokensLastMinute();
+  const reqLastMin    = getReqLastMinute();
+  const groqTokenPct  = Math.min(100, Math.round((tokensLastMin / GROQ_LIMIT_PER_MIN) * 100));
+  const groqReqPct    = Math.min(100, Math.round((reqLastMin    / GROQ_REQ_PER_MIN)    * 100));
+  const hfReqPct      = Math.min(100, Math.round((reqLastMin    / HF_REQ_PER_MIN)      * 100));
+
+  // ── อัปเดต bar Groq ──
+  const groqBar  = document.getElementById('groqBar');
+  const groqPct  = document.getElementById('groqPct');
+  const groqDet  = document.getElementById('groqDetail');
+  if (groqBar && groqPct && groqDet) {
+    groqBar.style.width = groqTokenPct + '%';
+    groqPct.textContent = groqTokenPct + '%';
+    groqBar.className   = 'token-bar-fill ' + (groqTokenPct >= 90 ? 'tb-critical' : groqTokenPct >= 70 ? 'tb-warn' : 'tb-ok');
+    groqDet.innerHTML   = `
+      <span>tokens/นาทีนี้:</span> ${tokensLastMin.toLocaleString()} / ${GROQ_LIMIT_PER_MIN.toLocaleString()}<br>
+      <span>request ล่าสุด:</span> ${groq.promptTokens || 0}→${groq.completionTokens || 0} (รวม ${groq.totalTokens || 0})<br>
+      <span>session ทั้งหมด:</span> ${totalSessionGroqTokens.toLocaleString()} tokens
+    `;
+  }
+
+  // ── อัปเดต bar HuggingFace ──
+  const hfBar = document.getElementById('hfBar');
+  const hfPct = document.getElementById('hfPct');
+  const hfDet = document.getElementById('hfDetail');
+  if (hfBar && hfPct && hfDet) {
+    hfBar.style.width = hfReqPct + '%';
+    hfPct.textContent = hfReqPct + '%';
+    hfBar.className   = 'token-bar-fill ' + (hfReqPct >= 90 ? 'tb-critical' : hfReqPct >= 70 ? 'tb-warn' : 'tb-ok');
+    hfDet.innerHTML   = `
+      <span>req/นาทีนี้:</span> ${reqLastMin} / ${HF_REQ_PER_MIN}<br>
+      <span>embed tokens:</span> ~${hf.embedTokens || 0} tokens/request<br>
+      <span>model:</span> multilingual-e5-large
+    `;
+  }
+
+  // ── อัปเดต Token Badge ใน header ──
+  const badge = document.getElementById('tokenBadge');
+  if (badge) {
+    const worstPct = Math.max(groqTokenPct, hfReqPct);
+    badge.classList.remove('token-warn', 'token-critical');
+    if (worstPct >= 90) {
+      badge.classList.add('token-critical');
+      badge.textContent = '⚠ TOKEN';
+    } else if (worstPct >= 70) {
+      badge.classList.add('token-warn');
+      badge.textContent = '🟡 TOKEN';
+    } else {
+      badge.textContent = '⚡ TOKEN';
+    }
+  }
+
+  // ── แสดง Alert Banner ──
+  const banner = document.getElementById('tokenAlertBanner');
+  if (banner) {
+    if (warn && warn.level) {
+      banner.className = 'token-alert-banner ' + (warn.level === 'critical' ? 'tab-critical' : 'tab-warn');
+      banner.textContent = warn.message;
+    } else {
+      banner.className = '';
+      banner.textContent = '';
+    }
+  }
+
+  // ── Toast notification ถ้า critical ──
+  if (warn && warn.level === 'critical') {
+    showTokenToast(warn.message);
+  }
+}
+
+function showTokenToast(msg) {
+  let toast = document.getElementById('tokenToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'tokenToast';
+    toast.style.cssText = 'position:fixed;top:72px;left:50%;transform:translateX(-50%);background:#ff3333;color:#fff;font-family:var(--font-mono);font-size:0.65rem;font-weight:700;padding:7px 18px;border-radius:20px;letter-spacing:1px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 5000);
+}
+
+function toggleTokenPanel() {
+  const p = document.getElementById('tokenPanel');
+  if (!p) return;
+  // ปิด panels อื่น
+  document.getElementById('historyPanel')?.classList.remove('open');
+  document.getElementById('unitPanel')?.classList.remove('open');
+  document.getElementById('zoomControls')?.classList.remove('open');
+  document.getElementById('zoomFab')?.classList.remove('active');
+  p.classList.toggle('open');
+}
+
+// ปิด token panel เมื่อ click ข้างนอก
+document.addEventListener('click', e => {
+  if (!e.target.closest('.token-panel') && !e.target.closest('#tokenBadge')) {
+    document.getElementById('tokenPanel')?.classList.remove('open');
+  }
+});
+
+// โหลด history ตอนเริ่ม
+loadTokenHistory();
+
+/* ══ BG ANIMATION ══ */
+const canvas=document.getElementById('bg-canvas');
+const ctx=canvas.getContext('2d');
+let W=canvas.width=window.innerWidth;
+let H=canvas.height=window.innerHeight;
+window.addEventListener('resize',()=>{W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;});
+const opts={len:18,count:25,baseTime:30,addedTime:25,dieChance:.03,spawnChance:.6,sparkChance:.05,sparkDist:6,color:'hsl(hue,100%,light%)',baseLight:50,addedLight:10,shadowToTimePropMult:4,baseLightInputMultiplier:.008,addedLightInputMultiplier:.015,cx:W/2,cy:H/2,repaintAlpha:.03,hueChange:.02};
+let tick=0;const lines=[];const dieX=W/2/opts.len;const dieY=H/2/opts.len;const baseRad=Math.PI*2/6;
+ctx.fillStyle='black';ctx.fillRect(0,0,W,H);
+class Line{constructor(){this.reset();}reset(){this.x=0;this.y=0;this.addedX=0;this.addedY=0;this.rad=0;this.lightInputMultiplier=opts.baseLightInputMultiplier+opts.addedLightInputMultiplier*Math.random();this.color=opts.color.replace('hue',tick*opts.hueChange);this.cumulativeTime=0;this.beginPhase();}beginPhase(){this.x+=this.addedX;this.y+=this.addedY;this.time=0;this.targetTime=(opts.baseTime+opts.addedTime*Math.random())|0;this.rad+=baseRad*(Math.random()<.5?1:-1);this.addedX=Math.cos(this.rad);this.addedY=Math.sin(this.rad);if(Math.random()<opts.dieChance||this.x>dieX||this.x<-dieX||this.y>dieY||this.y<-dieY)this.reset();}step(){++this.time;++this.cumulativeTime;if(this.time>=this.targetTime)this.beginPhase();const prop=this.time/this.targetTime;const wave=Math.sin(prop*Math.PI/2);ctx.shadowBlur=prop*opts.shadowToTimePropMult;ctx.fillStyle=ctx.shadowColor=this.color.replace('light',opts.baseLight+opts.addedLight*Math.sin(this.cumulativeTime*this.lightInputMultiplier));ctx.fillRect(opts.cx+(this.x+wave*this.addedX)*opts.len,opts.cy+(this.y+wave*this.addedY)*opts.len,2,2);}}
+function loop(){requestAnimationFrame(loop);++tick;opts.cx=W/2;opts.cy=H/2;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.fillStyle='rgba(0,0,0,'+opts.repaintAlpha+')';ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='lighter';if(lines.length<opts.count&&Math.random()<opts.spawnChance)lines.push(new Line());lines.forEach(l=>l.step());}
 loop();
 
-/* ── Chat core ── */
-const webhookURL = "https://a7ivalc0.rpcld.com/webhook/lineoa";
+/* ══ CHAT CORE ══ */
+const webhookURL = "http://localhost:5678/webhook/lineoa"; // ← เปลี่ยนเป็น URL จริงของ n8n คุณ
 const chat  = document.getElementById('chat');
 const input = document.getElementById('messageInput');
 let msgCount=0, lastUserMsg='';
 
-function updateCharCount(el) { document.getElementById('charCount').textContent = el.value.length; }
-function getTime() { return new Date().toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
-function clearChat() { chat.innerHTML=''; location.reload(); }
-function quickAsk(text) { input.value=text; updateCharCount(input); sendMessage(); }
-function removeWelcome() { const w=document.getElementById('welcome'); if(w)w.remove(); }
+function updateCharCount(el){document.getElementById('charCount').textContent=el.value.length;}
+function getTime(){return new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function clearChat(){chat.innerHTML='';location.reload();}
 
-function addMessage(text, sender) {
-  removeWelcome(); msgCount++;
-  if (sender==='user') {
+window.addEventListener('online', ()=>removeOfflineBanner());
+window.addEventListener('offline',()=>showOfflineBanner());
+function showOfflineBanner(){if(document.getElementById('offlineBanner'))return;const b=document.createElement('div');b.id='offlineBanner';b.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#ff6a00;color:#fff;padding:6px 18px;border-radius:20px;font-size:12px;z-index:9999;letter-spacing:1px;';b.textContent='⚠ ไม่มีการเชื่อมต่ออินเทอร์เน็ต';document.body.appendChild(b);}
+function removeOfflineBanner(){const b=document.getElementById('offlineBanner');if(b)b.remove();}
+function quickAsk(text){input.value=text;updateCharCount(input);sendMessage();}
+function removeWelcome(){const w=document.getElementById('welcome');if(w)w.remove();}
+
+function addMessage(text,sender,elapsed){
+  removeWelcome();msgCount++;
+  if(sender==='user'){
     lastUserMsg=text;
-    const wrap=document.createElement('div'); wrap.className='msg-wrap user';
-    const meta=document.createElement('div'); meta.className='msg-meta'; meta.textContent=`YOU [${shortId}] · ${getTime()}`;
-    const bubble=document.createElement('div'); bubble.className='message'; bubble.textContent=text;
-    wrap.appendChild(meta); wrap.appendChild(bubble); chat.appendChild(wrap);
+    const wrap=document.createElement('div');wrap.className='msg-wrap user';
+    const meta=document.createElement('div');meta.className='msg-meta';meta.textContent=`YOU [${shortId}] · ${getTime()}`;
+    const bubble=document.createElement('div');bubble.className='message';bubble.textContent=text;
+    wrap.appendChild(meta);wrap.appendChild(bubble);chat.appendChild(wrap);
   } else {
-    const card=buildCard(text, getTime(), lastUserMsg); chat.appendChild(card);
+    const timeLabel=elapsed?`${getTime()} · ${elapsed}s`:getTime();
+    const card=buildCard(text,timeLabel,lastUserMsg);chat.appendChild(card);
   }
   chat.scrollTop=chat.scrollHeight;
 }
-function addLoading() { removeWelcome(); const wrap=document.createElement('div'); wrap.className='loading-wrap'; wrap.id='loading'; wrap.innerHTML=`<div class="loading-bubble"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>`; chat.appendChild(wrap); chat.scrollTop=chat.scrollHeight; }
-function removeLoading() { const el=document.getElementById('loading'); if(el)el.remove(); }
+function addLoading(){
+  removeWelcome();
+  const wrap=document.createElement('div');wrap.className='loading-wrap';wrap.id='loading';
+  wrap.innerHTML=`<div class="loading-bubble"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div><span style="font-size:11px;color:var(--text-dim);margin-left:8px;font-family:var(--font-mono)">AI กำลังคิด...</span>`;
+  chat.appendChild(wrap);chat.scrollTop=chat.scrollHeight;
+}
+function removeLoading(){const el=document.getElementById('loading');if(el)el.remove();}
+
+let isSending=false;
 
 async function sendMessage() {
-  const message = input.value.trim();
-  if (!message) return;
-  addMessage(message, 'user');
+  const message=input.value.trim();
+  if(!message||isSending)return;
+
+  // ── ตรวจสอบ token/request limit ──
+  const usage = getUsage();
+  const isReqFull   = usage.reqCount  >= REQ_LIMIT;
+  const isTokenFull = usage.tokenUsed >= TOKEN_LIMIT;
+  if (isReqFull || isTokenFull) {
+    showQuotaOverlay();
+    return;
+  }
+
+  isSending=true;
+  input.disabled=true;
+  const sendBtn=document.getElementById('sendBtn');
+  if(sendBtn){sendBtn.disabled=true;sendBtn.textContent='...';}
+
+  addMessage(message,'user');
   saveToHistory(message);
-  input.value=''; updateCharCount(input);
+  input.value='';updateCharCount(input);
   addLoading();
+
+  const controller=new AbortController();
+  const timeoutId=setTimeout(()=>controller.abort(),60000);
+  const startTime=Date.now();
+
   try {
-    const res  = await fetch(webhookURL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ message }) });
-    const data = await res.json();
+    const res=await fetch(webhookURL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        message,
+        sessionId:    userId,
+        requestCount: usage.reqCount,    // จำนวน request ที่ใช้ไปในรอบนี้
+        tokenUsed:    usage.tokenUsed,   // token ที่ใช้ไปในรอบนี้
+        windowStart:  usage.windowStart  // เวลาเริ่ม window
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    const elapsed=((Date.now()-startTime)/1000).toFixed(1);
     removeLoading();
-    addMessage(data.reply ? data.reply.trim() : 'ไม่มีคำตอบจาก AI', 'bot');
-  } catch(e) {
+
+    // ตรวจสอบว่า n8n บล็อกกลับมา
+    if(data.blocked){
+      addMessage(data.reply||'⛔ ใช้ครบแล้ว','bot',elapsed);
+      showQuotaOverlay(data.resetInMin);
+      return;
+    }
+
+    // ── นับ token จริงที่ n8n ส่งกลับมา ──
+    const tokensUsed = parseInt(data.tokens || '0', 10);
+    const newUsage = incrementUsage(tokensUsed);
+
+    addMessage(data.reply?data.reply.trim():'ไม่มีคำตอบจาก AI','bot',elapsed);
+
+    // เตือน/บล็อก ถ้าเกิน limit หลังตอบ
+    if(newUsage.reqCount >= REQ_LIMIT || newUsage.tokenUsed >= TOKEN_LIMIT){
+      setTimeout(()=>showQuotaOverlay(),800);
+    } else {
+      const reqPct   = Math.round((newUsage.reqCount  / REQ_LIMIT)   * 100);
+      const tokenPct = Math.round((newUsage.tokenUsed / TOKEN_LIMIT) * 100);
+      const maxPct   = Math.max(reqPct, tokenPct);
+      if(maxPct >= 90){
+        showToast('⚠️ เหลืออีก '+(REQ_LIMIT-newUsage.reqCount)+' คำถาม | Token '+tokenPct+'%', 'warn');
+      } else if(maxPct >= 70 && !content._warned70){
+        showToast('Token ใช้ไป '+maxPct+'% แล้ว', 'info');
+      }
+    }
+
+  } catch(e){
+    clearTimeout(timeoutId);
     removeLoading();
-    addMessage('ไม่สามารถเชื่อมต่อกับ AI Server ได้\nกรุณาตรวจสอบการเชื่อมต่อและลองใหม่', 'bot');
+    if(e.name==='AbortError'){
+      addMessage('คำขอใช้เวลานานเกินไป (60 วินาที)\nกรุณาลองใหม่อีกครั้ง','bot');
+    } else {
+      addMessage('ไม่สามารถเชื่อมต่อกับ AI Server ได้ กรุณาตรวจสอบการเชื่อมต่อและลองใหม่','bot');
+      input.value=message;
+      updateCharCount(input);
+    }
+  } finally {
+    isSending=false;
+    input.disabled=false;
+    if(sendBtn){sendBtn.disabled=false;sendBtn.textContent='SEND';}
+    input.focus();
   }
 }
 
-/* ── History ── */
-function loadHistory() { try { return JSON.parse(storage.getItem(HISTORY_KEY)||'[]'); } catch(e) { return []; } }
-function saveToHistory(msg) {
-  try {
-    let h=loadHistory(); h=h.filter(x=>x.text!==msg); h.unshift({text:msg,time:getTime()});
-    if(h.length>20) h=h.slice(0,20); storage.setItem(HISTORY_KEY, JSON.stringify(h));
-  } catch(e) {}
-  renderHistory();
-}
-function clearHistory() { try { storage.removeItem(HISTORY_KEY); } catch(e) {} renderHistory(); }
-function renderHistory() {
-  const list=document.getElementById('historyList'); const badge=document.getElementById('histBadge');
-  if(!list||!badge) return;
-  const h=loadHistory(); badge.textContent=h.length; badge.style.display=h.length?'flex':'none'; list.innerHTML='';
-  if(!h.length) { list.innerHTML='<div class="history-empty">ยังไม่มีประวัติ</div>'; return; }
-  h.forEach(x => {
-    const item=document.createElement('div'); item.className='history-item';
-    const s1=document.createElement('span'); s1.textContent=x.text;
-    const s2=document.createElement('span'); s2.className='history-time'; s2.textContent=x.time;
-    item.appendChild(s1); item.appendChild(s2);
-    item.addEventListener('click', () => { input.value=x.text; updateCharCount(input); toggleHistory(); setTimeout(()=>sendMessage(),50); });
-    list.appendChild(item);
-  });
-}
-function toggleHistory() {
-  const p=document.getElementById('historyPanel'); const u=document.getElementById('unitPanel');
-  if(!p) return;
-  u&&u.classList.remove('open');
-  document.getElementById('zoomControls')?.classList.remove('open');
-  document.getElementById('zoomFab')?.classList.remove('active');
-  p.classList.toggle('open');
-  if(p.classList.contains('open')) renderHistory();
-}
+/* ══ HISTORY ══ */
+function loadHistory(){try{return JSON.parse(storage.getItem(HISTORY_KEY)||'[]');}catch(e){return[];}}
+function saveToHistory(msg){try{let h=loadHistory();h=h.filter(x=>x.text!==msg);h.unshift({text:msg,time:getTime()});if(h.length>20)h=h.slice(0,20);storage.setItem(HISTORY_KEY,JSON.stringify(h));}catch(e){}renderHistory();}
+function clearHistory(){try{storage.removeItem(HISTORY_KEY);}catch(e){}renderHistory();}
+function renderHistory(){const list=document.getElementById('historyList');const badge=document.getElementById('histBadge');if(!list||!badge)return;const h=loadHistory();badge.textContent=h.length;badge.style.display=h.length?'flex':'none';list.innerHTML='';if(!h.length){list.innerHTML='<div class="history-empty">ยังไม่มีประวัติ</div>';return;}h.forEach(x=>{const item=document.createElement('div');item.className='history-item';const s1=document.createElement('span');s1.textContent=x.text;const s2=document.createElement('span');s2.className='history-time';s2.textContent=x.time;item.appendChild(s1);item.appendChild(s2);item.addEventListener('click',()=>{input.value=x.text;updateCharCount(input);toggleHistory();setTimeout(()=>sendMessage(),50);});list.appendChild(item);});}
+function toggleHistory(){const p=document.getElementById('historyPanel');const u=document.getElementById('unitPanel');if(!p)return;u&&u.classList.remove('open');document.getElementById('zoomControls')?.classList.remove('open');document.getElementById('zoomFab')?.classList.remove('active');p.classList.toggle('open');if(p.classList.contains('open'))renderHistory();}
 
-/* ── ปิด panel เมื่อ click ข้างนอก ── */
-document.addEventListener('click', e => {
-  if(!e.target.closest('.history-panel')&&!e.target.closest('.history-btn')) { const hp=document.getElementById('historyPanel'); if(hp)hp.classList.remove('open'); }
-  if(!e.target.closest('.unit-panel')&&!e.target.closest('.unit-btn')) { const up=document.getElementById('unitPanel'); if(up)up.classList.remove('open'); }
-  if(!e.target.closest('.zoom-controls')&&!e.target.closest('.zoom-fab')) {
-    document.getElementById('zoomControls')?.classList.remove('open');
-    document.getElementById('zoomFab')?.classList.remove('active');
-  }
-});
+document.addEventListener('click',e=>{if(!e.target.closest('.history-panel')&&!e.target.closest('.history-btn')){const hp=document.getElementById('historyPanel');if(hp)hp.classList.remove('open');}if(!e.target.closest('.unit-panel')&&!e.target.closest('.unit-btn')){const up=document.getElementById('unitPanel');if(up)up.classList.remove('open');}if(!e.target.closest('.zoom-controls')&&!e.target.closest('.zoom-fab')){document.getElementById('zoomControls')?.classList.remove('open');document.getElementById('zoomFab')?.classList.remove('active');}});
 
-/* ── Unit Converter ── */
-const unitDefs = {
-  pressure: { label:'แรงดัน (Pressure)', base:'kPa', inputs: [
-    {id:'up_kpa',label:'kPa', toBase:v=>v,         fromBase:v=>v},
-    {id:'up_bar',label:'bar', toBase:v=>v*100,       fromBase:v=>v/100},
-    {id:'up_psi',label:'psi', toBase:v=>v/0.145038, fromBase:v=>v*0.145038},
-    {id:'up_atm',label:'atm', toBase:v=>v*101.325,  fromBase:v=>v/101.325},
-  ]},
-  torque: { label:'แรงบิด (Torque)', base:'Nm', inputs: [
-    {id:'ut_nm',  label:'Nm',    toBase:v=>v,         fromBase:v=>v},
-    {id:'ut_kgf', label:'kgf·m',toBase:v=>v*9.80665, fromBase:v=>v/9.80665},
-    {id:'ut_ftlb',label:'ft·lb',toBase:v=>v*1.35582, fromBase:v=>v/1.35582},
-    {id:'ut_inlb',label:'in·lb',toBase:v=>v*0.11298, fromBase:v=>v/0.11298},
-  ]},
-  length: { label:'ความยาว (Length)', base:'mm', inputs: [
-    {id:'ul_mm',  label:'mm',  toBase:v=>v,     fromBase:v=>v},
-    {id:'ul_cm',  label:'cm',  toBase:v=>v*10,  fromBase:v=>v/10},
-    {id:'ul_inch',label:'inch',toBase:v=>v*25.4,fromBase:v=>v/25.4},
-    {id:'ul_m',   label:'m',   toBase:v=>v*1000,fromBase:v=>v/1000},
-  ]},
-  speed: { label:'ความเร็ว (Speed)', base:'km/h', inputs: [
-    {id:'us_kmh', label:'km/h',toBase:v=>v,       fromBase:v=>v},
-    {id:'us_mph', label:'mph', toBase:v=>v*1.60934,fromBase:v=>v/1.60934},
-    {id:'us_ms',  label:'m/s', toBase:v=>v*3.6,   fromBase:v=>v/3.6},
-    {id:'us_knot',label:'knot',toBase:v=>v*1.852, fromBase:v=>v/1.852},
-  ]},
-  temp: { label:'อุณหภูมิ (Temperature)', base:'°C', inputs: [
-    {id:'utemp_c',label:'°C',toC:v=>v,           fromC:v=>v},
-    {id:'utemp_f',label:'°F',toC:v=>(v-32)/1.8,  fromC:v=>v*1.8+32},
-    {id:'utemp_k',label:'K', toC:v=>v-273.15,     fromC:v=>v+273.15},
-  ]}
-};
+/* ══ UNIT CONVERTER ══ */
+const unitDefs={pressure:{label:'แรงดัน (Pressure)',base:'kPa',inputs:[{id:'up_kpa',label:'kPa',toBase:v=>v,fromBase:v=>v},{id:'up_bar',label:'bar',toBase:v=>v*100,fromBase:v=>v/100},{id:'up_psi',label:'psi',toBase:v=>v/0.145038,fromBase:v=>v*0.145038},{id:'up_atm',label:'atm',toBase:v=>v*101.325,fromBase:v=>v/101.325}]},torque:{label:'แรงบิด (Torque)',base:'Nm',inputs:[{id:'ut_nm',label:'Nm',toBase:v=>v,fromBase:v=>v},{id:'ut_kgf',label:'kgf·m',toBase:v=>v*9.80665,fromBase:v=>v/9.80665},{id:'ut_ftlb',label:'ft·lb',toBase:v=>v*1.35582,fromBase:v=>v/1.35582},{id:'ut_inlb',label:'in·lb',toBase:v=>v*0.11298,fromBase:v=>v/0.11298}]},length:{label:'ความยาว (Length)',base:'mm',inputs:[{id:'ul_mm',label:'mm',toBase:v=>v,fromBase:v=>v},{id:'ul_cm',label:'cm',toBase:v=>v*10,fromBase:v=>v/10},{id:'ul_inch',label:'inch',toBase:v=>v*25.4,fromBase:v=>v/25.4},{id:'ul_m',label:'m',toBase:v=>v*1000,fromBase:v=>v/1000}]},speed:{label:'ความเร็ว (Speed)',base:'km/h',inputs:[{id:'us_kmh',label:'km/h',toBase:v=>v,fromBase:v=>v},{id:'us_mph',label:'mph',toBase:v=>v*1.60934,fromBase:v=>v/1.60934},{id:'us_ms',label:'m/s',toBase:v=>v*3.6,fromBase:v=>v/3.6},{id:'us_knot',label:'knot',toBase:v=>v*1.852,fromBase:v=>v/1.852}]},temp:{label:'อุณหภูมิ (Temperature)',base:'°C',inputs:[{id:'utemp_c',label:'°C',toC:v=>v,fromC:v=>v},{id:'utemp_f',label:'°F',toC:v=>(v-32)/1.8,fromC:v=>v*1.8+32},{id:'utemp_k',label:'K',toC:v=>v-273.15,fromC:v=>v+273.15}]}};
 let currentUnitTab='pressure';
-function setUnitTab(tab,el) { currentUnitTab=tab; document.querySelectorAll('.unit-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); renderUnitContent(); }
-function formatUnitValue(val) { if(isNaN(val)||!isFinite(val))return''; const abs=Math.abs(val); if(abs===0)return'0'; if(abs<0.0001||abs>=1e8)return val.toPrecision(4); if(Number.isInteger(val))return val.toString(); return parseFloat(val.toFixed(4)).toString(); }
-function renderUnitContent() {
-  const def=unitDefs[currentUnitTab]; const c=document.getElementById('unitContent'); if(!c)return;
-  let html=`<div class="unit-all-grid">`;
-  def.inputs.forEach((inp,idx) => {
-    html+=`<div class="unit-all-row"><span class="unit-all-label">${inp.label}</span><input class="unit-all-input" id="${inp.id}" type="number" placeholder="0" step="any" autocomplete="off" oninput="convertFromField('${inp.id}','${currentUnitTab}')" onfocus="this.select()"></div>`;
-    if(idx===1&&def.inputs.length>3) html+=`<div class="unit-divider"></div>`;
-  });
-  html+=`</div><div class="unit-hint">▶ พิมพ์ที่ช่องใดก็ได้ · ผลลัพธ์อัปเดตทุกช่องทันที</div>`;
-  c.innerHTML=html;
-}
-function convertFromField(sourceId,tab) {
-  try {
-    const def=unitDefs[tab]; const srcDef=def.inputs.find(x=>x.id===sourceId); const el=document.getElementById(sourceId);
-    if(!el||!srcDef)return; const rawVal=el.value.trim(); if(rawVal===''||rawVal==='-') { def.inputs.filter(x=>x.id!==sourceId).forEach(x=>{const e2=document.getElementById(x.id);if(e2){e2.value='';e2.classList.remove('result-field');}}); return; }
-    const val=parseFloat(rawVal); if(isNaN(val))return;
-    const baseVal=tab==='temp'?srcDef.toC(val):srcDef.toBase(val);
-    def.inputs.filter(x=>x.id!==sourceId).forEach(x=>{const e2=document.getElementById(x.id);if(!e2)return;const converted=tab==='temp'?x.fromC(baseVal):x.fromBase(baseVal);e2.value=formatUnitValue(converted);e2.classList.add('result-field');});
-    el.classList.remove('result-field');
-  } catch(e){}
-}
-function toggleUnit() {
-  const p=document.getElementById('unitPanel'); const h=document.getElementById('historyPanel');
-  if(!p)return; h&&h.classList.remove('open');
-  document.getElementById('zoomControls')?.classList.remove('open');
-  document.getElementById('zoomFab')?.classList.remove('active');
-  const isOpen=p.classList.toggle('open');
-  if(isOpen) { renderUnitContent(); setTimeout(()=>{const first=p.querySelector('.unit-all-input');if(first)first.focus();},150); }
-}
+function setUnitTab(tab,el){currentUnitTab=tab;document.querySelectorAll('.unit-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderUnitContent();}
+function formatUnitValue(val){if(isNaN(val)||!isFinite(val))return'';const abs=Math.abs(val);if(abs===0)return'0';if(abs<0.0001||abs>=1e8)return val.toPrecision(4);if(Number.isInteger(val))return val.toString();return parseFloat(val.toFixed(4)).toString();}
+function renderUnitContent(){const def=unitDefs[currentUnitTab];const c=document.getElementById('unitContent');if(!c)return;let html=`<div class="unit-all-grid">`;def.inputs.forEach((inp,idx)=>{html+=`<div class="unit-all-row"><span class="unit-all-label">${inp.label}</span><input class="unit-all-input" id="${inp.id}" type="number" placeholder="0" step="any" autocomplete="off" oninput="convertFromField('${inp.id}','${currentUnitTab}')" onfocus="this.select()"></div>`;if(idx===1&&def.inputs.length>3)html+=`<div class="unit-divider"></div>`;});html+=`</div><div class="unit-hint">▶ พิมพ์ที่ช่องใดก็ได้ · ผลลัพธ์อัปเดตทุกช่องทันที</div>`;c.innerHTML=html;}
+function convertFromField(sourceId,tab){try{const def=unitDefs[tab];const srcDef=def.inputs.find(x=>x.id===sourceId);const el=document.getElementById(sourceId);if(!el||!srcDef)return;const rawVal=el.value.trim();if(rawVal===''||rawVal==='-'){def.inputs.filter(x=>x.id!==sourceId).forEach(x=>{const e2=document.getElementById(x.id);if(e2){e2.value='';e2.classList.remove('result-field');}});return;}const val=parseFloat(rawVal);if(isNaN(val))return;const baseVal=tab==='temp'?srcDef.toC(val):srcDef.toBase(val);def.inputs.filter(x=>x.id!==sourceId).forEach(x=>{const e2=document.getElementById(x.id);if(!e2)return;const converted=tab==='temp'?x.fromC(baseVal):x.fromBase(baseVal);e2.value=formatUnitValue(converted);e2.classList.add('result-field');});el.classList.remove('result-field');}catch(e){}}
+function toggleUnit(){const p=document.getElementById('unitPanel');const h=document.getElementById('historyPanel');if(!p)return;h&&h.classList.remove('open');document.getElementById('zoomControls')?.classList.remove('open');document.getElementById('zoomFab')?.classList.remove('active');const isOpen=p.classList.toggle('open');if(isOpen){renderUnitContent();setTimeout(()=>{const first=p.querySelector('.unit-all-input');if(first)first.focus();},150);}}
 
-/* ── Bot card builder ── */
-function parseToCard(text) {
-  const lines=text.split('\n').filter(l=>l.trim()); if(lines.length<3)return null;
-  const sections=[]; let current=null; const isKV=l=>/^[\w\s()/%°]+\s*[=≈]\s*.+/.test(l);
-  for(const line of lines) {
-    const trimmed=line.trim(); if(!trimmed)continue;
-    if(isKV(trimmed)) {
-      if(!current||current.type!=='kv'){current={type:'kv',items:[]};sections.push(current);}
-      const sep=trimmed.includes('≈')?'≈':'='; const idx=trimmed.indexOf(sep);
-      current.items.push({key:trimmed.slice(0,idx).trim(),val:trimmed.slice(idx+1).trim(),sep});
-    } else { current={type:'text',text:trimmed}; sections.push(current); current=null; }
-  }
-  return sections.length>=2?sections:null;
-}
-function buildCard(text,timeStr,question) {
-  const sections=parseToCard(text); const card=document.createElement('div'); card.className='msg-wrap bot';
-  const meta=document.createElement('div'); meta.className='msg-meta'; meta.textContent=`AI APITECH · ${timeStr}`; card.appendChild(meta);
-  if(!sections) {
-    const wrap=document.createElement('div'); wrap.className='bot-card';
-    const header=document.createElement('div'); header.className='bot-card-header'; header.innerHTML='<span class="bot-card-title">AI APITECH</span>';
-    const body=document.createElement('div'); body.className='bot-card-body';
-    const sec=document.createElement('div'); sec.className='card-section';
-    const p=document.createElement('div'); p.className='card-plain'; p.textContent=text;
-    sec.appendChild(p); body.appendChild(sec); wrap.appendChild(header); wrap.appendChild(body); card.appendChild(wrap);
-    addCardActions(card,wrap,text,question); return card;
-  }
-  const wrap=document.createElement('div'); wrap.className='bot-card';
-  const titleSec=sections.find(s=>s.type==='text');
-  const header=document.createElement('div'); header.className='bot-card-header';
-  header.innerHTML=`<span class="bot-card-title">${titleSec?titleSec.text.toUpperCase():'AI APITECH'}</span>`;
-  wrap.appendChild(header);
-  const body=document.createElement('div'); body.className='bot-card-body';
-  let isFirst=true;
-  for(const sec of sections) {
-    if(sec.type==='text'&&isFirst){isFirst=false;continue;}
-    const div=document.createElement('div'); div.className='card-section';
-    if(sec.type==='kv') {
-      const kv=document.createElement('div'); kv.className='card-kv';
-      sec.items.forEach((item,i)=>{const row=document.createElement('div');row.className='card-row';const isResult=item.sep==='≈'||i===sec.items.length-1;row.innerHTML=`<span class="card-key">${item.key}</span><span class="card-val${isResult?' highlight':''}">${item.sep} ${item.val}</span>`;kv.appendChild(row);});
-      div.appendChild(kv);
-    } else { const p=document.createElement('div');p.className='card-plain';p.textContent=sec.text;div.appendChild(p); }
-    body.appendChild(div); isFirst=false;
-  }
-  wrap.appendChild(body); card.appendChild(wrap); addCardActions(card,wrap,text,question); return card;
-}
-function addCardActions(card,wrap,text,question) {
-  const actions=document.createElement('div'); actions.className='card-actions';
-  const copyBtn=document.createElement('button'); copyBtn.className='copy-btn'; copyBtn.textContent='COPY';
-  copyBtn.onclick=()=>{ navigator.clipboard.writeText(text).then(()=>{copyBtn.textContent='COPIED ✓';setTimeout(()=>copyBtn.textContent='COPY',2000);}); };
-  const shareBtn=document.createElement('button'); shareBtn.className='share-btn'; shareBtn.textContent='SHARE';
-  shareBtn.onclick=()=>shareResult(text,question||'');
-  actions.appendChild(copyBtn); actions.appendChild(shareBtn); wrap.appendChild(actions);
-}
+/* ══ BOT CARD ══ */
+function parseToCard(text){const lines=text.split('\n').filter(l=>l.trim());if(lines.length<3)return null;const sections=[];let current=null;const isKV=l=>/^[\w\s()/%°]+\s*[=≈]\s*.+/.test(l);for(const line of lines){const trimmed=line.trim();if(!trimmed)continue;if(isKV(trimmed)){if(!current||current.type!=='kv'){current={type:'kv',items:[]};sections.push(current);}const sep=trimmed.includes('≈')?'≈':'=';const idx=trimmed.indexOf(sep);current.items.push({key:trimmed.slice(0,idx).trim(),val:trimmed.slice(idx+1).trim(),sep});}else{current={type:'text',text:trimmed};sections.push(current);current=null;}}return sections.length>=2?sections:null;}
+function buildCard(text,timeStr,question){const sections=parseToCard(text);const card=document.createElement('div');card.className='msg-wrap bot';const meta=document.createElement('div');meta.className='msg-meta';meta.textContent=`AI APITECH · ${timeStr}`;card.appendChild(meta);if(!sections){const wrap=document.createElement('div');wrap.className='bot-card';const header=document.createElement('div');header.className='bot-card-header';header.innerHTML='<span class="bot-card-title">AI APITECH</span>';const body=document.createElement('div');body.className='bot-card-body';const sec=document.createElement('div');sec.className='card-section';const p=document.createElement('div');p.className='card-plain';p.textContent=text;sec.appendChild(p);body.appendChild(sec);wrap.appendChild(header);wrap.appendChild(body);card.appendChild(wrap);addCardActions(card,wrap,text,question);return card;}const wrap=document.createElement('div');wrap.className='bot-card';const titleSec=sections.find(s=>s.type==='text');const header=document.createElement('div');header.className='bot-card-header';header.innerHTML=`<span class="bot-card-title">${titleSec?titleSec.text.toUpperCase():'AI APITECH'}</span>`;wrap.appendChild(header);const body=document.createElement('div');body.className='bot-card-body';let isFirst=true;for(const sec of sections){if(sec.type==='text'&&isFirst){isFirst=false;continue;}const div=document.createElement('div');div.className='card-section';if(sec.type==='kv'){const kv=document.createElement('div');kv.className='card-kv';sec.items.forEach((item,i)=>{const row=document.createElement('div');row.className='card-row';const isResult=item.sep==='≈'||i===sec.items.length-1;row.innerHTML=`<span class="card-key">${item.key}</span><span class="card-val${isResult?' highlight':''}">${item.sep} ${item.val}</span>`;kv.appendChild(row);});div.appendChild(kv);}else{const p=document.createElement('div');p.className='card-plain';p.textContent=sec.text;div.appendChild(p);}body.appendChild(div);isFirst=false;}wrap.appendChild(body);card.appendChild(wrap);addCardActions(card,wrap,text,question);return card;}
+function addCardActions(card,wrap,text,question){const actions=document.createElement('div');actions.className='card-actions';const copyBtn=document.createElement('button');copyBtn.className='copy-btn';copyBtn.textContent='COPY';copyBtn.onclick=()=>{navigator.clipboard.writeText(text).then(()=>{copyBtn.textContent='COPIED ✓';setTimeout(()=>copyBtn.textContent='COPY',2000);});};const shareBtn=document.createElement('button');shareBtn.className='share-btn';shareBtn.textContent='SHARE';shareBtn.onclick=()=>shareResult(text,question||'');actions.appendChild(copyBtn);actions.appendChild(shareBtn);wrap.appendChild(actions);}
 
-/* ── Voice input ── */
-let recognition=null, isListening=false, voiceTimeout=null;
+/* ══ VOICE ══ */
+let recognition=null,isListening=false,voiceTimeout=null;
 const SpeechRecognitionAPI=window.SpeechRecognition||window.webkitSpeechRecognition;
-function setVoiceUI(active) {
-  const btn=document.getElementById('voiceBtn'); const status=document.getElementById('voiceStatus');
-  if(!btn||!status)return;
-  if(active){btn.classList.add('listening');status.classList.add('active');input.placeholder='🎙 กำลังฟัง... (พูดได้เลย)';}
-  else{btn.classList.remove('listening');status.classList.remove('active');input.placeholder='พิมพ์คำถามหรือค่าที่ต้องการคำนวณ...';}
-}
-function stopVoice() { isListening=false;setVoiceUI(false);clearTimeout(voiceTimeout);if(recognition){try{recognition.abort();}catch(e){}recognition=null;} }
-function startVoice() {
-  if(!SpeechRecognitionAPI){alert('Voice Input ไม่รองรับในเบราว์เซอร์นี้\nกรุณาใช้ Chrome หรือ Edge บน Android/Desktop ครับ');return;}
-  stopVoice(); const r=new SpeechRecognitionAPI(); r.lang='th-TH';r.continuous=false;r.interimResults=true;r.maxAlternatives=3; recognition=r;
-  r.onstart=()=>{isListening=true;setVoiceUI(true);voiceTimeout=setTimeout(()=>{if(isListening)stopVoice();},10000);};
-  r.onresult=(e)=>{let interim='',final='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)final+=t;else interim+=t;}input.value=final||interim;updateCharCount(input);};
-  r.onend=()=>{const txt=input.value.trim();stopVoice();if(txt)setTimeout(()=>sendMessage(),100);};
-  r.onerror=(e)=>{stopVoice();const msgs={'not-allowed':'ไม่ได้รับอนุญาตใช้ไมโครโฟน\nกรุณากด Allow ในเบราว์เซอร์','no-speech':'ไม่ได้ยินเสียง ลองพูดใกล้ไมค์อีกครั้ง','network':'เชื่อมต่อ network ไม่ได้','aborted':''};const msg=msgs[e.error];if(msg)alert(msg);};
-  try{r.start();}catch(e){stopVoice();alert('เริ่ม Voice Input ไม่ได้: '+e.message);}
-}
-function toggleVoice() { if(isListening)stopVoice();else startVoice(); }
+function setVoiceUI(active){const btn=document.getElementById('voiceBtn');const status=document.getElementById('voiceStatus');if(!btn||!status)return;if(active){btn.classList.add('listening');status.classList.add('active');input.placeholder='🎙 กำลังฟัง... (พูดได้เลย)';}else{btn.classList.remove('listening');status.classList.remove('active');input.placeholder='พิมพ์คำถามหรือค่าที่ต้องการคำนวณ...';}}
+function stopVoice(){isListening=false;setVoiceUI(false);clearTimeout(voiceTimeout);if(recognition){try{recognition.abort();}catch(e){}recognition=null;}}
+function startVoice(){if(!SpeechRecognitionAPI){alert('Voice Input ไม่รองรับในเบราว์เซอร์นี้\nกรุณาใช้ Chrome หรือ Edge บน Android/Desktop ครับ');return;}stopVoice();const r=new SpeechRecognitionAPI();r.lang='th-TH';r.continuous=false;r.interimResults=true;r.maxAlternatives=3;recognition=r;r.onstart=()=>{isListening=true;setVoiceUI(true);voiceTimeout=setTimeout(()=>{if(isListening)stopVoice();},10000);};r.onresult=(e)=>{let interim='',final='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)final+=t;else interim+=t;}input.value=final||interim;updateCharCount(input);};r.onend=()=>{const txt=input.value.trim();stopVoice();if(txt)setTimeout(()=>sendMessage(),100);};r.onerror=(e)=>{stopVoice();const msgs={'not-allowed':'ไม่ได้รับอนุญาตใช้ไมโครโฟน\nกรุณากด Allow ในเบราว์เซอร์','no-speech':'ไม่ได้ยินเสียง ลองพูดใกล้ไมค์อีกครั้ง','network':'เชื่อมต่อ network ไม่ได้','aborted':''};const msg=msgs[e.error];if(msg)alert(msg);};try{r.start();}catch(e){stopVoice();alert('เริ่ม Voice Input ไม่ได้: '+e.message);}}
+function toggleVoice(){if(isListening)stopVoice();else startVoice();}
 
-/* ── Share ── */
-function shareResult(text,question) {
-  const shareText=['🔧 AI API TECH T0.1','',`📌 คำถาม: ${question}`,'','📊 ผลลัพธ์:',text].join('\n');
-  navigator.clipboard.writeText(shareText).then(()=>{const toast=document.getElementById('shareToast');if(toast){toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2000);}});
-}
+/* ══ SHARE ══ */
+function shareResult(text,question){const shareText=['🔧 AI API TECH T0.1','',`📌 คำถาม: ${question}`,'','📊 ผลลัพธ์:',text].join('\n');navigator.clipboard.writeText(shareText).then(()=>{const toast=document.getElementById('shareToast');if(toast){toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2000);}});}
 
 /* ══════════════════════════════════════════════
-   MODAL DATA + SYSTEM
+   MODAL DATA
    ══════════════════════════════════════════════ */
 const modalData = {
-
-  obd: {
-    title: 'รหัสความผิดปกติ OBD / ECU',
-    subtitle: 'FAULT CODE DIAGNOSIS',
-    icon: 'all icon/obd_icon.png',
-    desc: 'วิเคราะห์รหัสผิดปกติจาก ECU ทั้งรหัสไทย (Honda/Yamaha/Kawasaki/Suzuki/KTM) และรหัส OBD-II มาตรฐาน (P0xxx)',
-    params: ['รหัส Honda: 1-2A', 'รหัส OBD2: P0xxx', 'ชื่อยี่ห้อ + รหัส'],
-    examples: [
-      'รหัสความผิดปกติ Honda รหัส 1-1',
-      'รหัสความผิดปกติ OBD รหัส P1668',
-      'รหัสความผิดปกติ Suzuki รหัส C13-1',
-      'รหัสความผิดปกติ Kawasaki รหัส 12-1',
-      'รหัสความผิดปกติ KTM รหัส 13-1',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ bore(ลูกสูบ) / ลูกสูบ(bore) / stroke(ระยะชักเดิม) / extrastroke(เพิ่มชัก)
-  cc: {
-    title: 'คำนวณ CC / ลูกสูบ / ระยะชัก',
-    subtitle: 'ENGINE DISPLACEMENT CALCULATOR',
-    icon: 'all icon/Untitled design.png',
-    desc: 'ป้อน 2 ใน 3 ค่า (bore/stroke/CC) ระบบคำนวณค่าที่เหลือให้อัตโนมัติ ใส่ extrastroke ถ้ามีการเพิ่มชัก',
-    params: ['CC(ปริมาตรกระบอกสูบ) หรือ ซีซี', 'bore(ลูกสูบ) mm', 'stroke(ระยะชักเดิม) mm', 'extrastroke(เพิ่มชัก) mm'],
-    examples: [
-      'bore(ลูกสูบ) 58 stroke(ระยะชักเดิม) 57 extrastroke(เพิ่มชัก) 5',
-      '150cc bore(ลูกสูบ) 57 extrastroke(เพิ่มชัก) 5',
-      '170cc stroke(ระยะชักเดิม) 60 extrastroke(เพิ่มชัก) 5',
-      'bore(ลูกสูบ) 63 stroke(ระยะชักเดิม) 63 150cc',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ afr(อัตราส่วนอากาศ) / airflow(ปริมาณอากาศ)
-  afr: {
-    title: 'อัตราส่วนอากาศต่อเชื้อเพลิง (AFR)',
-    subtitle: 'AIR-FUEL RATIO CALCULATOR',
-    icon: 'all icon/AF_icon.png',
-    desc: 'คำนวณปริมาณน้ำมันเชื้อเพลิงที่ใช้จาก AFR และอัตราการไหลของอากาศ',
-    params: ['afr(อัตราส่วนอากาศ) ตัวเลข', 'airflow(ปริมาณอากาศ) ตัวเลข'],
-    examples: [
-      'afr(อัตราส่วนอากาศ) 14.7 airflow(ปริมาณอากาศ) 300',
-      'afr(อัตราส่วนอากาศ) 13 airflow(ปริมาณอากาศ) 280',
-      'อัตราส่วนอากาศ(afr) 12.5 ปริมาณอากาศ(airflow) 250',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ cc(ปริมาตรกระบอกสูบ) และ chamber(ห้องเผาไหม้)
-  staticcr: {
-    title: 'อัตราส่วนกำลังอัดสถิต (Static CR)',
-    subtitle: 'STATIC COMPRESSION RATIO',
-    icon: 'all icon/static_cr_icon.png',
-    desc: 'คำนวณอัตราส่วนกำลังอัดจากขนาด CC และปริมาตรห้องเผาไหม้',
-    params: ['CC(ปริมาตรกระบอกสูบ) หรือ ซีซี', 'chamber(ห้องเผาไหม้) cc'],
-    examples: [
-      '150cc chamber(ห้องเผาไหม้) 14',
-      '170cc chamber(ห้องเผาไหม้) 15',
-      '155cc ห้องเผาไหม้(chamber) 13.5',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ stroke(ระยะชัก) / rpm(รอบต่อนาที) / cc ซีซี
-  pistonspeed: {
-    title: 'ความเร็วลูกสูบเฉลี่ย + ปริมาณอากาศ',
-    subtitle: 'MEAN PISTON SPEED + AIRFLOW',
-    icon: 'all icon/piston_speed_icon.png',
-    desc: 'คำนวณความเร็วเฉลี่ยของลูกสูบ (MPS) และอัตราการไหลของอากาศที่รอบสูงสุด',
-    params: ['stroke(ระยะชัก) mm', 'rpm(รอบต่อนาที) ตัวเลข', 'cc หรือ ซีซี'],
-    examples: [
-      'stroke(ระยะชัก) 55 rpm(รอบต่อนาที) 9000',
-      '150cc rpm(รอบต่อนาที) 8500',
-      '150cc stroke(ระยะชัก) 55 rpm(รอบต่อนาที) 9000',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ cr(กำลังอัด) / pressure(แรงดัน) / k(ตัวคูณ)
-  compression: {
-    title: 'แรงดันตอนอัด / แรงดันตอนระเบิด',
-    subtitle: 'COMPRESSION & COMBUSTION PRESSURE',
-    icon: 'all icon/cressioompn_pressure_icon.png',
-    desc: 'ประมาณแรงดันในกระบอกสูบตอนอัด และแรงดันสูงสุดตอนระเบิดจากค่า CR',
-    params: ['cr(กำลังอัด) ตัวเลข', 'k(ตัวคูณ) ค่าเริ่มต้น=8', 'pressure(แรงดัน) kPa'],
-    examples: [
-      'cr(กำลังอัด) 11',
-      'cr(กำลังอัด) 12 k(ตัวคูณ) 9',
-      'pressure(แรงดัน) 1200',
-      'แรงดัน(pressure) 1100',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ cr(กำลังอัด) / ivc(ปิดวาล์วไอดี) / stroke(ระยะชัก) / rod(ก้านสูบ)
-  dynamiccr: {
-    title: 'กำลังอัดพลวัต (Dynamic CR)',
-    subtitle: 'DYNAMIC COMPRESSION RATIO',
-    icon: 'all icon/Dynamic CR Icon.png',
-    desc: 'คำนวณ Dynamic CR จริงโดยคิดรวมมุมปิดวาล์วไอดี IVC ระยะชัก และความยาวก้านสูบ',
-    params: ['cr(กำลังอัด) ตัวเลข', 'ivc(ปิดวาล์วไอดี) องศา', 'stroke(ระยะชัก) mm', 'rod(ก้านสูบ) mm'],
-    examples: [
-      'cr(กำลังอัด) 12 ivc(ปิดวาล์วไอดี) 60 stroke(ระยะชัก) 55 rod(ก้านสูบ) 100',
-      'cr(กำลังอัด) 11.5 ivc(ปิดวาล์วไอดี) 55 stroke(ระยะชัก) 57.9 rod(ก้านสูบ) 105',
-      'กำลังอัด(cr) 13 ปิดวาล์วไอดี(ivc) 65 ระยะชัก(stroke) 48 ก้านสูบ(rod) 90',
-    ]
-  },
-
-  maintenance: {
-    title: 'ตารางเช็คระยะ / บำรุงรักษา',
-    subtitle: 'MAINTENANCE SCHEDULE',
-    icon: 'all icon/Maintenance Schedule Icon.png',
-    desc: 'สอบถามตารางบำรุงรักษารถมอเตอร์ไซค์ เช่น ระยะเปลี่ยนน้ำมัน ตรวจชิ้นส่วน',
-    params: ['ชื่อรถ + รุ่น', 'ชิ้นส่วนที่ต้องการรู้'],
-    examples: [
-      'ตรวจสอบท่อน้ำมันเชื้อเพลิง Yamaha XMAX 300 ที่ระยะเท่าไหร่',
-      'เปลี่ยนไส้กรองอากาศรอง Honda PCX 160 ที่กี่กม.',
-      'ตารางเช็คระยะ Kawasaki Z900',
-      'Honda CRF300L เปลี่ยนหัวเทียนทุกกี่กิโล',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ actual(จริง) / theoretical(ทฤษฎี)
-  ve: {
-    title: 'ประสิทธิภาพการอัดอากาศ (VE%)',
-    subtitle: 'VOLUMETRIC EFFICIENCY',
-    icon: 'all icon/VE Icon.png',
-    desc: 'คำนวณ % ประสิทธิภาพการดูดอากาศจริงเทียบกับทฤษฎี',
-    params: ['actual(จริง) CFM', 'theoretical(ทฤษฎี) CFM'],
-    examples: [
-      'actual(จริง) 280 theoretical(ทฤษฎี) 320',
-      'จริง(actual) 300 ทฤษฎี(theoretical) 350',
-      'actual(จริง) 250 theoretical(ทฤษฎี) 300',
-    ]
-  },
-
-  // ⚠️ regex: (hp|แรงม้า|horsepower)\s*(\d+) — ไม่รองรับวงเล็บหลัง keyword
-  injector: {
-    title: 'คำนวณขนาดหัวฉีด (Injector Sizing)',
-    subtitle: 'INJECTOR SIZING CALCULATOR',
-    icon: 'all icon/Injector Sizing Icon.png',
-    desc: 'คำนวณขนาด cc/min ของหัวฉีดที่ต้องการจากแรงม้าเป้าหมาย',
-    params: ['hp ตัวเลข (แรงม้า)', 'cyl ตัวเลข (จำนวนสูบ)', 'bsfc ค่าเริ่มต้น=0.55'],
-    examples: [
-      'hp 50 cyl 1',
-      'แรงม้า 100 สูบ 4',
-      'hp 70 cyl 1',
-    ]
-  },
-
-  // ⚠️ regex: (จาก|from|old|เดิม)\s*(\d+)\s*(cc|ซีซี) — ไม่รองรับวงเล็บ
-  jet: {
-    title: 'คำนวณเมนเจ็ตคาร์บูเรเตอร์',
-    subtitle: 'CARBURETOR MAIN JET SIZE',
-    icon: 'all icon/Carburetor Jet Size Icon.png',
-    desc: 'คำนวณขนาดเมนเจ็ตใหม่เมื่อเปลี่ยนขนาด CC',
-    params: ['จาก CC เดิม (from)', 'เป็น CC ใหม่ (to)', 'jet เจ็ต เบอร์เดิม'],
-    examples: [
-      'จาก 150cc เป็น 200cc jet 118',
-      'จาก 125cc เป็น 150cc เจ็ต 112',
-      'from 110cc to 125cc jet 105',
-    ]
-  },
-
-  // ⚠️ regex: (cr|compression|กำลังอัด)\s*(\d+) — ไม่รองรับวงเล็บหลัง keyword
-  ignition: {
-    title: 'องศาจุดระเบิด (Ignition Timing)',
-    subtitle: 'IGNITION TIMING ADVISOR',
-    icon: 'all icon/Ignition Timing.png',
-    desc: 'แนะนำองศาจุดระเบิดที่เหมาะสมจาก CR รอบเครื่อง และค่าออกเทน',
-    params: ['cr ตัวเลข (กำลังอัด)', 'rpm ตัวเลข (รอบต่อนาที)', 'ron ตัวเลข (ออกเทน)'],
-    examples: [
-      'cr 12 timing 30',
-      'cr 11 rpm 9000',
-      'กำลังอัด 13 ออกเทน 95',
-    ]
-  },
-
-  // ⚠️ regex: (hp|แรงม้า)\s*(\d+) — ไม่รองรับวงเล็บ
-  throttle: {
-    title: 'ขนาดลิ้นเร่ง (Throttle Body Size)',
-    subtitle: 'THROTTLE BODY SIZING',
-    icon: 'all icon/throttle_body_icon.png',
-    desc: 'คำนวณขนาดลิ้นเร่ง mm ที่เหมาะสมกับแรงม้าและ CC',
-    params: ['hp ตัวเลข (แรงม้า)', 'cc ซีซี (ถ้ามี)'],
-    examples: [
-      'throttle hp 50',
-      'throttle hp 100',
-      'ลิ้นเร่ง แรงม้า 30 150cc',
-    ]
-  },
-
-  // ⚠️ regex: (cr|compression)\s*(\d+) และ (rpm)\s*(\d+) — ไม่รองรับวงเล็บ
-  hptorque: {
-    title: 'ประเมินแรงม้า / แรงบิด (HP / Torque)',
-    subtitle: 'HP & TORQUE ESTIMATOR',
-    icon: 'all icon/hp_torque_icon.png',
-    desc: 'ประมาณแรงม้าและแรงบิดจาก CC, CR และรอบสูงสุด หรือแปลงหน่วย HP ↔ Nm',
-    params: [
-      'cc หรือ ซีซี (ปริมาตรกระบอกสูบ)',
-      'cr ตัวเลข หรือ compression ตัวเลข (ห้ามใช้ กำลังอัด / วงเล็บ)',
-      'rpm ตัวเลข (ห้ามใช้ รอบต่อนาที / วงเล็บ)',
-      'hp ตัวเลข หรือ แรงม้า ตัวเลข + nm ตัวเลข หรือ นิวตัน ตัวเลข (แปลงหน่วย)',
-    ],
-    examples: [
-      '150cc',
-      '150cc cr 12',
-      '150cc cr 12 rpm 10000',
-      '250cc compression 11 rpm 9500',
-      'hp 30 nm 25',
-      'แรงม้า 45 นิวตัน 38',
-    ]
-  },
-
-  // ⚠️ regex: (rpm|รอบต่อนาที)\s*(\d+) — ไม่รองรับวงเล็บ
-  exhaust: {
-    title: 'ขนาดท่อไอเสีย (Exhaust Header)',
-    subtitle: 'EXHAUST HEADER SIZING',
-    icon: 'all icon/exhaust_icon.png',
-    desc: 'คำนวณเส้นผ่านศูนย์กลางและความยาวท่อไอเสียที่เหมาะสม',
-    params: ['cc ซีซี', 'rpm ตัวเลข (รอบต่อนาที peak power)'],
-    examples: [
-      'exhaust 150cc rpm 9000',
-      'exhaust 250cc rpm 8500',
-      'ท่อไอเสีย 125cc รอบต่อนาที 9500',
-    ]
-  },
-
-  // ⚠️ regex: (rpm)\s*(\d+) — ไม่รองรับวงเล็บ
-  intake: {
-    title: 'ความยาวท่อไอดี (Intake Runner)',
-    subtitle: 'INTAKE RUNNER LENGTH',
-    icon: 'all icon/Exhaust Icon.png',
-    desc: 'คำนวณความยาวท่อไอดีที่เหมาะสมเพื่อ resonance ที่รอบ peak power',
-    params: ['rpm ตัวเลข (รอบต่อนาที peak)', 'cc ซีซี (ถ้ามี)'],
-    examples: [
-      'ท่อไอดี rpm 8000',
-      'ท่อไอดี 150cc rpm 9000',
-      'intake runner รอบต่อนาที 10000',
-    ]
-  },
-
-  // ⚠️ regex: (intake|ไอดี|int)\s*(\d+) และ (exhaust|ไอเสีย|exh)\s*(\d+) — ไม่รองรับวงเล็บ
-  lsa: {
-    title: 'มุมแยกแคมชาฟต์ (Valve Timing LSA)',
-    subtitle: 'LOBE SEPARATION ANGLE',
-    icon: 'all icon/valve_timing_icon.png',
-    desc: 'คำนวณ Lobe Separation Angle จากมุม centerline ของแคม intake และ exhaust',
-    params: ['intake ตัวเลข (ไอดี) องศา', 'exhaust ตัวเลข (ไอเสีย) องศา'],
-    examples: [
-      'intake 104 exhaust 108',
-      'intake 108 exhaust 112',
-      'ไอดี 106 ไอเสีย 110',
-    ]
-  },
-
-  // ⚠️ regex: (hp|แรงม้า)\s*(\d+) — ไม่รองรับวงเล็บ
-  coolant: {
-    title: 'ระบบหล่อเย็น (Coolant Flow Rate)',
-    subtitle: 'COOLANT FLOW CALCULATOR',
-    icon: 'all icon/Coolant Icon.png',
-    desc: 'คำนวณอัตราการไหลของน้ำหล่อเย็นที่ต้องการตามแรงม้า',
-    params: ['hp ตัวเลข (แรงม้า)', 'cc ซีซี (ถ้ามี)'],
-    examples: [
-      'coolant hp 30',
-      'coolant hp 100',
-      'น้ำหล่อเย็น แรงม้า 50',
-    ]
-  },
-
-  // ⚠️ regex: (cr|compression|กำลังอัด)\s*(\d+) และ (rpm|รอบต่อนาที)\s*(\d+) — ไม่รองรับวงเล็บ
-  oil: {
-    title: 'เลือกเกรดน้ำมันเครื่อง (Oil Viscosity)',
-    subtitle: 'OIL VISCOSITY GRADE ADVISOR',
-    icon: 'all icon/oil_icon.png',
-    desc: 'แนะนำเกรดน้ำมันเครื่องที่เหมาะสมจาก CR, รอบเครื่อง และสภาพอากาศ',
-    params: ['cr ตัวเลข (กำลังอัด)', 'rpm ตัวเลข (รอบต่อนาที)', 'cc ซีซี (ถ้ามี)'],
-    examples: [
-      'น้ำมันเครื่อง cr 13 rpm 11000',
-      'oil cr 10.5 rpm 8000',
-      'น้ำมัน กำลังอัด 12 รอบต่อนาที 9000',
-    ]
-  },
-
-  // ⚠️ regex: (cr|compression|กำลังอัด)\s*(\d+) / (ron|octane|ออกเทน)\s*(\d+) / (timing|btdc|จุดระเบิด)\s*(\d+) — ไม่รองรับวงเล็บ
-  knock: {
-    title: 'ความเสี่ยงน็อค (Detonation Risk)',
-    subtitle: 'DETONATION RISK ASSESSMENT',
-    icon: 'all icon/detonation_icon.png',
-    desc: 'ประเมินความเสี่ยงน็อคจาก CR, ชนิดน้ำมัน และ timing',
-    params: ['cr ตัวเลข (กำลังอัด)', 'ron ตัวเลข (ออกเทน)', 'timing ตัวเลข (จุดระเบิด) องศา'],
-    examples: [
-      'knock cr 12',
-      'knock cr 13 ron 91',
-      'น็อค กำลังอัด 14 จุดระเบิด 32',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ rod(ก้านสูบ) / stroke(ระยะชัก)
-  rodratio: {
-    title: 'อัตราส่วนก้านสูบ (Rod Ratio)',
-    subtitle: 'CONNECTING ROD RATIO',
-    icon: 'all icon/Rod Ratio Icon.png',
-    desc: 'คำนวณอัตราส่วนก้านสูบ Rod/Stroke และผลต่อแรงกดด้านข้างลูกสูบ',
-    params: ['rod(ก้านสูบ) mm', 'stroke(ระยะชัก) mm'],
-    examples: [
-      'rod(ก้านสูบ) 105 stroke(ระยะชัก) 55',
-      'rod(ก้านสูบ) 110 stroke(ระยะชัก) 60',
-      'ก้านสูบ(rod) 98 ระยะชัก(stroke) 48',
-    ]
-  },
-
-  // ⚠️ regex: (cr|compression|กำลังอัด)\s*(\d+) / (timing|btdc|จุดระเบิด)\s*(\d+) — ไม่รองรับวงเล็บ
-  octane: {
-    title: 'ค่าออกเทนที่ต้องการ (Octane Requirement)',
-    subtitle: 'MINIMUM OCTANE REQUIREMENT',
-    icon: 'all icon/Octane Requirement Icon.png',
-    desc: 'คำนวณค่าออกเทนขั้นต่ำที่ควรใช้จาก CR และ timing จุดระเบิด',
-    params: ['cr ตัวเลข (กำลังอัด)', 'ron ตัวเลข (ออกเทน ปัจจุบัน)'],
-    examples: [
-      'cr 13 ron 91',
-      'cr 12',
-      'กำลังอัด 11.5 ออกเทน 95',
-    ]
-  },
-
-  // ⚠️ regex: (rpm|รอบต่อนาที)\s*(\d+) / (lift|ยก|ระยะยกวาล์ว)\s*(\d+) — ไม่รองรับวงเล็บ
-  valvespring: {
-    title: 'ความแข็งสปริงวาล์ว (Valve Spring Rate)',
-    subtitle: 'VALVE SPRING RATE CALCULATOR',
-    icon: 'all icon/valve_spring_icon.png',
-    desc: 'คำนวณค่า spring rate ขั้นต่ำสำหรับรอบสูงสุดและ lift ของวาล์ว',
-    params: ['rpm ตัวเลข (รอบต่อนาที)', 'lift ตัวเลข (ระยะยกวาล์ว) mm', 'mass ตัวเลข (น้ำหนักวาล์ว) g'],
-    examples: [
-      'valve spring rpm 10000 lift 9',
-      'valve spring rpm 12000 lift 10',
-      'สปริงวาล์ว รอบต่อนาที 9000 ระยะยกวาล์ว 8',
-    ]
-  },
-
-  // ⚠️ regex: (hp|แรงม้า)\s*(\d+) / (kg|กิโล|น้ำหนัก)\s*(\d+) — ไม่รองรับวงเล็บ
-  pw: {
-    title: 'อัตราส่วนกำลังต่อน้ำหนัก (Power/Weight)',
-    subtitle: 'POWER TO WEIGHT RATIO',
-    icon: 'all icon/PowerWeight Icon.png',
-    desc: 'คำนวณ hp/kg จากแรงม้าและน้ำหนักรถรวมผู้ขี่',
-    params: ['hp ตัวเลข (แรงม้า)', 'kg ตัวเลข (น้ำหนักรวม)'],
-    examples: [
-      'hp 45 kg 130',
-      'hp 80 kg 180',
-      'แรงม้า 30 น้ำหนัก 140',
-    ]
-  },
-
-  // ⚠️ regex: (front|หน้า|เฟืองหน้า)\s*(\d+) / (rear|หลัง|เฟืองหลัง)\s*(\d+) / (rpm|รอบต่อนาที)\s*(\d+) — ไม่รองรับวงเล็บ
-  gear: {
-    title: 'อัตราทดเกียร์ / สเปรกโซ่ (Gear Ratio)',
-    subtitle: 'GEAR & SPROCKET RATIO',
-    icon: 'all icon/gear_ratio_icon.png',
-    desc: 'คำนวณความเร็วสูงสุดจากสเปรกหน้า-หลัง และรอบเครื่อง',
-    params: ['front ตัวเลข (เฟืองหน้า ฟัน)', 'rear ตัวเลข (เฟืองหลัง ฟัน)', 'rpm ตัวเลข (รอบต่อนาที)'],
-    examples: [
-      'front 14 rear 42 rpm 9000',
-      'front 15 rear 40 rpm 8000',
-      'เฟืองหน้า 13 เฟืองหลัง 45 รอบต่อนาที 9500',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ weight(น้ำหนัก) / sag(ระยะยุบ)
-  springrate: {
-    title: 'ความแข็งโช้คอัพ (Spring Rate)',
-    subtitle: 'SUSPENSION SPRING RATE',
-    icon: 'all icon/spring_rate_icon.png',
-    desc: 'คำนวณค่าความแข็งสปริง N/mm ที่เหมาะสมจากน้ำหนักและ sag เป้าหมาย',
-    params: ['weight(น้ำหนัก) kg', 'sag(ระยะยุบ) mm'],
-    examples: [
-      'spring weight(น้ำหนัก) 70 sag(ระยะยุบ) 30',
-      'spring weight(น้ำหนัก) 85 sag(ระยะยุบ) 35',
-      'สปริงโช้ค น้ำหนัก(weight) 75 ระยะยุบ(sag) 28',
-    ]
-  },
-
-  // ⚠️ regex: (free sag|free|ยุบอิสระ)\s*(\d+) / (race sag|race|ยุบขับ)\s*(\d+) — ไม่รองรับวงเล็บ
-  sag: {
-    title: 'ตั้งค่าระยะยุบโช้ค (Sag Setup)',
-    subtitle: 'SAG SETUP ADVISOR',
-    icon: 'all icon/sag_setup_icon.png',
-    desc: 'วิเคราะห์ race sag และ free sag เพื่อแนะนำการปรับโช้ค',
-    params: ['free sag ตัวเลข (ยุบอิสระ) mm', 'race sag ตัวเลข (ยุบขับ) mm'],
-    examples: [
-      'free sag 10 race sag 30',
-      'free sag 15 race sag 35',
-      'ยุบอิสระ 8 ยุบขับ 28',
-    ]
-  },
-
-  // ⚠️ regex: (rake|มุมคอแกน)\s*(\d+) / (offset|ออฟเซ็ต)\s*(\d+) — ไม่รองรับวงเล็บ
-  rake: {
-    title: 'มุมคอแกน / ระยะเลื่อน (Rake & Trail)',
-    subtitle: 'RAKE & TRAIL CALCULATOR',
-    icon: 'all icon/rake_trail_icon.png',
-    desc: 'คำนวณระยะ Trail จากมุม Rake และขนาดล้อ',
-    params: ['rake ตัวเลข (มุมคอแกน) องศา', 'offset ตัวเลข (ออฟเซ็ต) mm'],
-    examples: [
-      'rake 24',
-      'rake 25 offset 30',
-      'มุมคอแกน 23 ออฟเซ็ต 28',
-    ]
-  },
-
-  // ⚠️ regex: (swingarm|สวิงอาร์ม)\s*(\d+) — ไม่รองรับวงเล็บ
-  swingarm: {
-    title: 'ความยาวสวิงอาร์ม (Swingarm)',
-    subtitle: 'SWINGARM LENGTH EFFECT',
-    icon: 'all icon/swingarm_icon.png',
-    desc: 'วิเคราะห์ผลของความยาวสวิงอาร์มต่อพฤติกรรมการขับขี่',
-    params: ['swingarm ตัวเลข (สวิงอาร์ม) mm'],
-    examples: [
-      'swingarm 420',
-      'swingarm 450',
-      'สวิงอาร์ม 380',
-    ]
-  },
-
-  // ⚠️ regex: (weight|น้ำหนัก)\s*(\d+) / (front|เบรกหน้า)\s*(\d+) / (rear|เบรกหลัง)\s*(\d+) — ไม่รองรับวงเล็บ
-  brakebias: {
-    title: 'สัดส่วนแรงเบรก (Brake Bias)',
-    subtitle: 'FRONT/REAR BRAKE BIAS',
-    icon: 'all icon/brake_bias_icon.png',
-    desc: 'คำนวณสัดส่วนแรงเบรกหน้า-หลังที่เหมาะสมตามน้ำหนักรถ',
-    params: ['weight ตัวเลข (น้ำหนัก) kg', 'front ตัวเลข (เบรกหน้า) N', 'rear ตัวเลข (เบรกหลัง) N'],
-    examples: [
-      'brake bias weight 130',
-      'front 650 rear 350',
-      'น้ำหนัก 150 เบรกหน้า 70',
-    ]
-  },
-
-  // ⚠️ regex: (disc|จาน|จานเบรก)\s*(\d+) — ไม่รองรับวงเล็บ
-  brakedisc: {
-    title: 'ขนาดจานเบรก (Brake Disc Size)',
-    subtitle: 'BRAKE DISC DIAMETER',
-    icon: 'all icon/brake_disc_icon.png',
-    desc: 'วิเคราะห์ขนาดจานเบรกและความเหมาะสมกับการใช้งาน',
-    params: ['disc ตัวเลข (จานเบรก) mm'],
-    examples: [
-      'disc 280',
-      'disc 320',
-      'จานเบรก 260',
-    ]
-  },
-
-  // ⚠️ regex: (speed|ความเร็ว)\s*(\d+) / (mu|สัมประสิทธิ์)\s*(\d+) — ไม่รองรับวงเล็บ
-  brakingdist: {
-    title: 'ระยะเบรกหยุด (Braking Distance)',
-    subtitle: 'BRAKING DISTANCE CALCULATOR',
-    icon: 'all icon/braking_distance_icon.png',
-    desc: 'คำนวณระยะเบรกหยุดจากความเร็วและค่าสัมประสิทธิ์แรงเสียดทาน',
-    params: ['speed ตัวเลข (ความเร็ว) km/h', 'mu ตัวเลข (สัมประสิทธิ์) 0-1'],
-    examples: [
-      'speed 100 mu 0.7',
-      'speed 120 mu 0.8',
-      'ความเร็ว 80 สัมประสิทธิ์ 0.7',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ master(แม่ปั๊ม) / caliper(คาลิปเปอร์)
-  caliper: {
-    title: 'ขนาดลูกสูบคาลิปเปอร์ (Caliper)',
-    subtitle: 'BRAKE CALIPER PISTON RATIO',
-    icon: 'all icon/caliper_icon.png',
-    desc: 'คำนวณอัตราส่วน hydraulic advantage ของระบบเบรก',
-    params: ['master(แม่ปั๊ม) mm', 'caliper(คาลิปเปอร์) mm'],
-    examples: [
-      'master(แม่ปั๊ม) 14 caliper(คาลิปเปอร์) 32',
-      'master(แม่ปั๊ม) 16 caliper(คาลิปเปอร์) 34',
-      'แม่ปั๊ม(master) 12.7 คาลิปเปอร์(caliper) 30',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ volt(แรงดัน)
-  charging: {
-    title: 'วิเคราะห์แรงดันชาร์จ (Charging Voltage)',
-    subtitle: 'CHARGING SYSTEM ANALYSIS',
-    icon: 'all icon/charging_voltage_icon.png',
-    desc: 'วิเคราะห์สุขภาพระบบชาร์จจากแรงดันไฟที่วัดได้',
-    params: ['volt(แรงดัน) V'],
-    examples: [
-      'volt(แรงดัน) 14.2',
-      'volt(แรงดัน) 13.5',
-      'แรงดัน(volt) 15.1',
-    ]
-  },
-
-  // ⚠️ regex: (watt|วัตต์)\s*(\d+) — ไม่รองรับวงเล็บ
-  stator: {
-    title: 'กำลังไฟ Stator Output',
-    subtitle: 'STATOR POWER OUTPUT',
-    icon: 'all icon/stator_output_icon.png',
-    desc: 'ประเมินกำลังวัตต์ของ stator และกระแสสูงสุดที่จ่ายได้',
-    params: ['watt ตัวเลข (วัตต์)'],
-    examples: [
-      'stator watt 80',
-      'stator watt 150',
-      'สเตเตอร์ วัตต์ 200',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ watt(วัตต์)
-  fuse: {
-    title: 'ขนาดฟิวส์ (Fuse Rating)',
-    subtitle: 'FUSE SIZE CALCULATOR',
-    icon: 'all icon/fuse_icon.png',
-    desc: 'คำนวณขนาดแอมป์ฟิวส์ที่เหมาะสมจากวัตต์ของโหลด',
-    params: ['watt(วัตต์) ทั้งหมด', 'volt แรงดัน ค่าเริ่มต้น=12V'],
-    examples: [
-      'fuse watt(วัตต์) 55',
-      'fuse watt(วัตต์) 100',
-      'ฟิวส์ วัตต์(watt) 120',
-    ]
-  },
-
-  // ⚠️ regex: (cca)\s*(\d+) / cc ซีซี — ไม่รองรับวงเล็บ
-  cca: {
-    title: 'ความสามารถสตาร์ทเย็น (Battery CCA)',
-    subtitle: 'COLD CRANKING AMPERES',
-    icon: 'all icon/cca_icon.png',
-    desc: 'คำนวณ CCA ขั้นต่ำสำหรับสตาร์ทเครื่องในอุณหภูมิต่ำ',
-    params: ['cca ตัวเลข', 'cc ซีซี (ขนาดเครื่อง)', 'cyl ตัวเลข (สูบ ถ้ามี)'],
-    examples: [
-      'cca 150',
-      'cca 200 cc 400',
-      'แบตเตอรี่ cca 120 250cc',
-    ]
-  },
-
-  // ⚠️ regex: (load index|ดัชนีรับน้ำหนัก|li| li )\s*(\d+) — ไม่รองรับวงเล็บ
-  loadindex: {
-    title: 'ดัชนีรับน้ำหนักยาง (Load Index)',
-    subtitle: 'TIRE LOAD INDEX',
-    icon: 'all icon/load_index_icon.png',
-    desc: 'แปลงค่า Load Index เป็นน้ำหนักสูงสุดที่ยางรับได้',
-    params: ['li ตัวเลข (ดัชนี)', 'weight ตัวเลข (น้ำหนัก) kg (ถ้ามี)'],
-    examples: [
-      'load index 62',
-      'li 58',
-      'ดัชนีรับน้ำหนัก 55',
-    ]
-  },
-
-  circumference: {
-    title: 'เส้นรอบวงยาง (Rolling Circumference)',
-    subtitle: 'ROLLING CIRCUMFERENCE',
-    icon: 'all icon/circumference_icon.png',
-    desc: 'คำนวณเส้นรอบวงและรัศมียางจากขนาดมาตรฐาน',
-    params: ['ขนาดยาง เช่น 110/70 R17'],
-    examples: [
-      '110/70 r17',
-      '120/70 r17',
-      '130/70 r17',
-    ]
-  },
-
-  // ⚠️ regex: (orig|เดิม)\s*(\d{3}/\d{2}...) / (new|ใหม่)\s*(\d{3}/\d{2}...) — ไม่รองรับวงเล็บ
-  speedo: {
-    title: 'ความคลาดเคลื่อนมาตรวัด (Speedo Error)',
-    subtitle: 'SPEEDOMETER ERROR',
-    icon: 'all icon/speedo_error_icon.png',
-    desc: 'คำนวณ % ความคลาดเคลื่อนของมาตรวัดเมื่อเปลี่ยนขนาดยาง',
-    params: ['orig ขนาดยางเดิม (เดิม)', 'new ขนาดยางใหม่ (ใหม่)'],
-    examples: [
-      'orig เดิม 110/70 r17 new ใหม่ 120/70 r17',
-      'เดิม 100/80 r17 ใหม่ 110/80 r17',
-      'orig 120/70 r17 new 130/70 r17',
-    ]
-  },
-
-  // ✅ bilingual node — รองรับ weight(น้ำหนักรถ) / rider(ผู้ขับ)
-  tirepressure: {
-    title: 'แรงดันลมยางตามน้ำหนัก (Tire Pressure)',
-    subtitle: 'TIRE PRESSURE BY LOAD',
-    icon: 'all icon/tire_pressure_icon.png',
-    desc: 'แนะนำแรงดันลมยางหน้า-หลังตามน้ำหนักรถและผู้ขี่',
-    params: ['weight(น้ำหนักรถ) kg', 'rider(ผู้ขับ) kg'],
-    examples: [
-      'tire pressure weight(น้ำหนักรถ) 150 rider(ผู้ขับ) 70',
-      'tire pressure weight(น้ำหนักรถ) 180 rider(ผู้ขับ) 80',
-      'น้ำหนักรถ(weight) 130 ผู้ขับ(rider) 65',
-    ]
-  },
-
-  // ⚠️ regex: (rim|วงล้อ)\s*(\d+) — ไม่รองรับวงเล็บ
-  rimwidth: {
-    title: 'ความกว้างวงล้อที่รองรับ (Rim Width)',
-    subtitle: 'RIM WIDTH COMPATIBILITY',
-    icon: 'all icon/rim_width_icon.png.png',
-    desc: 'ตรวจสอบช่วงความกว้างวงล้อที่รองรับสำหรับยางขนาดที่เลือก',
-    params: ['rim ตัวเลข (วงล้อ) นิ้ว', 'ขนาดยาง (ถ้ามี)'],
-    examples: [
-      'rim 3.5',
-      'rim 3.0',
-      'วงล้อ 2.75',
-    ]
-  },
-
-}; // ── จบ modalData ──
-
-
-/* ══ openModal ══ */
-function openModal(key) {
-  closeModal();
-  const data = modalData[key];
-  if (!data) return;
-
-  const backdrop = document.createElement('div');
-  backdrop.className = 'modal-backdrop';
-  backdrop.id = 'modalBackdrop';
-  backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
-
-  const box = document.createElement('div');
-  box.className = 'modal-box';
-
-  // Header
-  const header = document.createElement('div');
-  header.className = 'modal-header';
-
-  const titleGroup = document.createElement('div');
-  titleGroup.className = 'modal-title-group';
-
-  if (data.icon) {
-    const img = document.createElement('img');
-    img.src = data.icon;
-    img.className = 'modal-icon';
-    img.alt = data.title;
-    img.onerror = () => img.style.display = 'none';
-    titleGroup.appendChild(img);
-  }
-
-  const titleWrap = document.createElement('div');
-  const titleEl = document.createElement('div');
-  titleEl.className = 'modal-title';
-  titleEl.textContent = data.title;
-  const subtitleEl = document.createElement('div');
-  subtitleEl.className = 'modal-subtitle';
-  subtitleEl.textContent = '◈ ' + data.subtitle;
-  titleWrap.appendChild(titleEl);
-  titleWrap.appendChild(subtitleEl);
-  titleGroup.appendChild(titleWrap);
-
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'modal-close';
-  closeBtn.textContent = '×';
-  closeBtn.onclick = closeModal;
-
-  header.appendChild(titleGroup);
-  header.appendChild(closeBtn);
-  box.appendChild(header);
-
-  // Body
-  const body = document.createElement('div');
-  body.className = 'modal-body';
-
-  if (data.desc) {
-    const descBlock = document.createElement('div');
-    descBlock.className = 'modal-desc';
-    const descP = document.createElement('p');
-    descP.textContent = data.desc;
-    descBlock.appendChild(descP);
-    body.appendChild(descBlock);
-  }
-
-  if (data.params && data.params.length) {
-    const paramTitle = document.createElement('div');
-    paramTitle.className = 'modal-section-title';
-    paramTitle.textContent = '◈ ค่าที่ระบุได้';
-    body.appendChild(paramTitle);
-
-    const paramWrap = document.createElement('div');
-    paramWrap.className = 'modal-params';
-    data.params.forEach(p => {
-      const badge = document.createElement('span');
-      badge.className = 'modal-param';
-      badge.textContent = p;
-      paramWrap.appendChild(badge);
-    });
-    body.appendChild(paramWrap);
-  }
-
-  if (data.examples && data.examples.length) {
-    const exTitle = document.createElement('div');
-    exTitle.className = 'modal-section-title';
-    exTitle.textContent = '◈ ตัวอย่าง — กดส่งได้ทันที';
-    body.appendChild(exTitle);
-
-    const exWrap = document.createElement('div');
-    exWrap.className = 'modal-examples';
-
-    data.examples.forEach(ex => {
-      const btn = document.createElement('button');
-      btn.className = 'modal-example-btn';
-
-      const icon = document.createElement('span');
-      icon.className = 'modal-example-icon';
-      icon.textContent = '▶';
-
-      const text = document.createElement('span');
-      text.className = 'modal-example-text';
-      text.textContent = ex;
-
-      const sendLabel = document.createElement('span');
-      sendLabel.className = 'modal-example-send';
-      sendLabel.textContent = 'ส่งทันที →';
-
-      btn.appendChild(icon);
-      btn.appendChild(text);
-      btn.appendChild(sendLabel);
-
-      btn.onclick = () => {
-        closeModal();
-        input.value = ex;
-        updateCharCount(input);
-        setTimeout(() => sendMessage(), 80);
-      };
-
-      exWrap.appendChild(btn);
-    });
-    body.appendChild(exWrap);
-  }
-
-  // Footer
-  const footer = document.createElement('div');
-  footer.className = 'modal-footer';
-
-  const modalInput = document.createElement('input');
-  modalInput.type = 'text';
-  modalInput.className = 'modal-input';
-  modalInput.placeholder = 'พิมพ์ค่าเอง หรือเลือกตัวอย่างด้านบน...';
-  modalInput.maxLength = 300;
-  modalInput.addEventListener('keypress', e => {
-    if (e.key === 'Enter') sendFromModal(modalInput.value);
-  });
-
-  const modalSendBtn = document.createElement('button');
-  modalSendBtn.className = 'modal-send-btn';
-  modalSendBtn.textContent = 'SEND →';
-  modalSendBtn.onclick = () => sendFromModal(modalInput.value);
-
-  footer.appendChild(modalInput);
-  footer.appendChild(modalSendBtn);
-  body.appendChild(footer);
-
-  box.appendChild(body);
-  backdrop.appendChild(box);
-  document.body.appendChild(backdrop);
-
-  setTimeout(() => modalInput.focus(), 200);
-  document.addEventListener('keydown', onModalKeyDown);
-}
-
-function sendFromModal(text) {
-  const t = (text || '').trim();
-  if (!t) return;
-  closeModal();
-  input.value = t;
-  updateCharCount(input);
-  setTimeout(() => sendMessage(), 80);
-}
-
-function closeModal() {
-  const el = document.getElementById('modalBackdrop');
-  if (el) el.remove();
-  document.removeEventListener('keydown', onModalKeyDown);
-}
-
-function onModalKeyDown(e) {
-  if (e.key === 'Escape') closeModal();
-}
+  obd:{title:'รหัสความผิดปกติ OBD / ECU',subtitle:'FAULT CODE DIAGNOSIS',icon:'all icon/obd_icon.png',desc:'วิเคราะห์รหัสผิดปกติจาก ECU ทั้งรหัสไทย (Honda/Yamaha/Kawasaki/Suzuki/KTM) และรหัส OBD-II มาตรฐาน (P0xxx)',params:['รหัส Honda: 1-2A','รหัส OBD2: P0xxx','ชื่อยี่ห้อ + รหัส'],examples:['รหัสความผิดปกติ Honda รหัส 1-1','รหัสความผิดปกติ OBD รหัส P1668','รหัสความผิดปกติ Suzuki รหัส C13-1','รหัสความผิดปกติ Kawasaki รหัส 12-1','รหัสความผิดปกติ KTM รหัส 13-1']},
+  cc:{title:'คำนวณ CC / ลูกสูบ / ระยะชัก',subtitle:'ENGINE DISPLACEMENT CALCULATOR',icon:'all icon/Untitled design.png',desc:'ป้อน 2 ใน 3 ค่า (bore/stroke/CC) ระบบคำนวณค่าที่เหลือให้อัตโนมัติ ใส่ extrastroke ถ้ามีการเพิ่มชัก',params:['CC(ปริมาตรกระบอกสูบ) หรือ ซีซี','bore(ลูกสูบ) mm','stroke(ระยะชักเดิม) mm','extrastroke(เพิ่มชัก) mm'],examples:['bore(ลูกสูบ) 58 stroke(ระยะชักเดิม) 57 extrastroke(เพิ่มชัก) 5','150cc bore(ลูกสูบ) 57 extrastroke(เพิ่มชัก) 5','170cc stroke(ระยะชักเดิม) 60 extrastroke(เพิ่มชัก) 5','bore(ลูกสูบ) 63 stroke(ระยะชักเดิม) 63 150cc']},
+  afr:{title:'อัตราส่วนอากาศต่อเชื้อเพลิง (AFR)',subtitle:'AIR-FUEL RATIO CALCULATOR',icon:'all icon/AF_icon.png',desc:'คำนวณปริมาณน้ำมันเชื้อเพลิงที่ใช้จาก AFR และอัตราการไหลของอากาศ',params:['afr(อัตราส่วนอากาศ) ตัวเลข','airflow(ปริมาณอากาศ) ตัวเลข'],examples:['afr(อัตราส่วนอากาศ) 14.7 airflow(ปริมาณอากาศ) 300','afr(อัตราส่วนอากาศ) 13 airflow(ปริมาณอากาศ) 280','อัตราส่วนอากาศ(afr) 12.5 ปริมาณอากาศ(airflow) 250']},
+  staticcr:{title:'อัตราส่วนกำลังอัดสถิต (Static CR)',subtitle:'STATIC COMPRESSION RATIO',icon:'all icon/static_cr_icon.png',desc:'คำนวณอัตราส่วนกำลังอัดจากขนาด CC และปริมาตรห้องเผาไหม้',params:['CC(ปริมาตรกระบอกสูบ) หรือ ซีซี','chamber(ห้องเผาไหม้) cc'],examples:['150cc chamber(ห้องเผาไหม้) 14','170cc chamber(ห้องเผาไหม้) 15','155cc ห้องเผาไหม้(chamber) 13.5']},
+  pistonspeed:{title:'ความเร็วลูกสูบเฉลี่ย + ปริมาณอากาศ',subtitle:'MEAN PISTON SPEED + AIRFLOW',icon:'all icon/piston_speed_icon.png',desc:'คำนวณความเร็วเฉลี่ยของลูกสูบ (MPS) และอัตราการไหลของอากาศที่รอบสูงสุด',params:['stroke(ระยะชัก) mm','rpm(รอบต่อนาที) ตัวเลข','cc หรือ ซีซี'],examples:['stroke(ระยะชัก) 55 rpm(รอบต่อนาที) 9000','150cc rpm(รอบต่อนาที) 8500','150cc stroke(ระยะชัก) 55 rpm(รอบต่อนาที) 9000']},
+  compression:{title:'แรงดันตอนอัด / แรงดันตอนระเบิด',subtitle:'COMPRESSION & COMBUSTION PRESSURE',icon:'all icon/cressioompn_pressure_icon.png',desc:'ประมาณแรงดันในกระบอกสูบตอนอัด และแรงดันสูงสุดตอนระเบิดจากค่า CR',params:['cr(กำลังอัด) ตัวเลข','k(ตัวคูณ) ค่าเริ่มต้น=8','pressure(แรงดัน) kPa'],examples:['cr(กำลังอัด) 11','cr(กำลังอัด) 12 k(ตัวคูณ) 9','pressure(แรงดัน) 1200','แรงดัน(pressure) 1100']},
+  dynamiccr:{title:'กำลังอัดพลวัต (Dynamic CR)',subtitle:'DYNAMIC COMPRESSION RATIO',icon:'all icon/Dynamic CR Icon.png',desc:'คำนวณ Dynamic CR จริงโดยคิดรวมมุมปิดวาล์วไอดี IVC ระยะชัก และความยาวก้านสูบ',params:['cr(กำลังอัด) ตัวเลข','ivc(ปิดวาล์วไอดี) องศา','stroke(ระยะชัก) mm','rod(ก้านสูบ) mm'],examples:['cr(กำลังอัด) 12 ivc(ปิดวาล์วไอดี) 60 stroke(ระยะชัก) 55 rod(ก้านสูบ) 100','cr(กำลังอัด) 11.5 ivc(ปิดวาล์วไอดี) 55 stroke(ระยะชัก) 57.9 rod(ก้านสูบ) 105','กำลังอัด(cr) 13 ปิดวาล์วไอดี(ivc) 65 ระยะชัก(stroke) 48 ก้านสูบ(rod) 90']},
+  maintenance:{title:'ตารางเช็คระยะ / บำรุงรักษา',subtitle:'MAINTENANCE SCHEDULE',icon:'all icon/Maintenance Schedule Icon.png',desc:'สอบถามตารางบำรุงรักษารถมอเตอร์ไซค์ เช่น ระยะเปลี่ยนน้ำมัน ตรวจชิ้นส่วน',params:['ชื่อรถ + รุ่น','ชิ้นส่วนที่ต้องการรู้'],examples:['ตรวจสอบท่อน้ำมันเชื้อเพลิง Yamaha XMAX 300 ที่ระยะเท่าไหร่','เปลี่ยนไส้กรองอากาศรอง Honda PCX 160 ที่กี่กม.','ตารางเช็คระยะ Kawasaki Z900','Honda CRF300L เปลี่ยนหัวเทียนทุกกี่กิโล']},
+  ve:{title:'ประสิทธิภาพการอัดอากาศ (VE%)',subtitle:'VOLUMETRIC EFFICIENCY',icon:'all icon/VE Icon.png',desc:'คำนวณ % ประสิทธิภาพการดูดอากาศจริงเทียบกับทฤษฎี',params:['actual(จริง) CFM','theoretical(ทฤษฎี) CFM'],examples:['actual(จริง) 280 theoretical(ทฤษฎี) 320','จริง(actual) 300 ทฤษฎี(theoretical) 350','actual(จริง) 250 theoretical(ทฤษฎี) 300']},
+  injector:{title:'คำนวณขนาดหัวฉีด (Injector Sizing)',subtitle:'INJECTOR SIZING CALCULATOR',icon:'all icon/Injector Sizing Icon.png',desc:'คำนวณขนาด cc/min ของหัวฉีดที่ต้องการจากแรงม้าเป้าหมาย',params:['hp ตัวเลข (แรงม้า)','cyl ตัวเลข (จำนวนสูบ)','bsfc ค่าเริ่มต้น=0.55'],examples:['hp 50 cyl 1','แรงม้า 100 สูบ 4','hp 70 cyl 1']},
+  jet:{title:'คำนวณเมนเจ็ตคาร์บูเรเตอร์',subtitle:'CARBURETOR MAIN JET SIZE',icon:'all icon/Carburetor Jet Size Icon.png',desc:'คำนวณขนาดเมนเจ็ตใหม่เมื่อเปลี่ยนขนาด CC',params:['จาก CC เดิม (from)','เป็น CC ใหม่ (to)','jet เจ็ต เบอร์เดิม'],examples:['จาก 150cc เป็น 200cc jet 118','จาก 125cc เป็น 150cc เจ็ต 112','from 110cc to 125cc jet 105']},
+  ignition:{title:'องศาจุดระเบิด (Ignition Timing)',subtitle:'IGNITION TIMING ADVISOR',icon:'all icon/Ignition Timing.png',desc:'แนะนำองศาจุดระเบิดที่เหมาะสมจาก CR รอบเครื่อง และค่าออกเทน',params:['cr ตัวเลข (กำลังอัด)','rpm ตัวเลข (รอบต่อนาที)','ron ตัวเลข (ออกเทน)'],examples:['cr 12 timing 30','cr 11 rpm 9000','กำลังอัด 13 ออกเทน 95']},
+  throttle:{title:'ขนาดลิ้นเร่ง (Throttle Body Size)',subtitle:'THROTTLE BODY SIZING',icon:'all icon/throttle_body_icon.png',desc:'คำนวณขนาดลิ้นเร่ง mm ที่เหมาะสมกับแรงม้าและ CC',params:['hp ตัวเลข (แรงม้า)','cc ซีซี (ถ้ามี)'],examples:['throttle hp 50','throttle hp 100','ลิ้นเร่ง แรงม้า 30 150cc']},
+  hptorque:{title:'ประเมินแรงม้า / แรงบิด (HP / Torque)',subtitle:'HP & TORQUE ESTIMATOR',icon:'all icon/hp_torque_icon.png',desc:'ประมาณแรงม้าและแรงบิดจาก CC, CR และรอบสูงสุด หรือแปลงหน่วย HP ↔ Nm',params:['cc หรือ ซีซี','cr ตัวเลข หรือ compression ตัวเลข','rpm ตัวเลข','hp ตัวเลข + nm ตัวเลข (แปลงหน่วย)'],examples:['150cc','150cc cr 12','150cc cr 12 rpm 10000','250cc compression 11 rpm 9500','hp 30 nm 25','แรงม้า 45 นิวตัน 38']},
+  exhaust:{title:'ขนาดท่อไอเสีย (Exhaust Header)',subtitle:'EXHAUST HEADER SIZING',icon:'all icon/exhaust_icon.png',desc:'คำนวณเส้นผ่านศูนย์กลางและความยาวท่อไอเสียที่เหมาะสม',params:['cc ซีซี','rpm ตัวเลข (รอบต่อนาที peak power)'],examples:['exhaust 150cc rpm 9000','exhaust 250cc rpm 8500','ท่อไอเสีย 125cc รอบต่อนาที 9500']},
+  intake:{title:'ความยาวท่อไอดี (Intake Runner)',subtitle:'INTAKE RUNNER LENGTH',icon:'all icon/Exhaust Icon.png',desc:'คำนวณความยาวท่อไอดีที่เหมาะสมเพื่อ resonance ที่รอบ peak power',params:['rpm ตัวเลข (รอบต่อนาที peak)','cc ซีซี (ถ้ามี)'],examples:['ท่อไอดี rpm 8000','ท่อไอดี 150cc rpm 9000','intake runner รอบต่อนาที 10000']},
+  lsa:{title:'มุมแยกแคมชาฟต์ (Valve Timing LSA)',subtitle:'LOBE SEPARATION ANGLE',icon:'all icon/valve_timing_icon.png',desc:'คำนวณ Lobe Separation Angle จากมุม centerline ของแคม intake และ exhaust',params:['intake ตัวเลข (ไอดี) องศา','exhaust ตัวเลข (ไอเสีย) องศา'],examples:['intake 104 exhaust 108','intake 108 exhaust 112','ไอดี 106 ไอเสีย 110']},
+  coolant:{title:'ระบบหล่อเย็น (Coolant Flow Rate)',subtitle:'COOLANT FLOW CALCULATOR',icon:'all icon/Coolant Icon.png',desc:'คำนวณอัตราการไหลของน้ำหล่อเย็นที่ต้องการตามแรงม้า',params:['hp ตัวเลข (แรงม้า)','cc ซีซี (ถ้ามี)'],examples:['coolant hp 30','coolant hp 100','น้ำหล่อเย็น แรงม้า 50']},
+  oil:{title:'เลือกเกรดน้ำมันเครื่อง (Oil Viscosity)',subtitle:'OIL VISCOSITY GRADE ADVISOR',icon:'all icon/oil_icon.png',desc:'แนะนำเกรดน้ำมันเครื่องที่เหมาะสมจาก CR, รอบเครื่อง และสภาพอากาศ',params:['cr ตัวเลข (กำลังอัด)','rpm ตัวเลข (รอบต่อนาที)','cc ซีซี (ถ้ามี)'],examples:['น้ำมันเครื่อง cr 13 rpm 11000','oil cr 10.5 rpm 8000','น้ำมัน กำลังอัด 12 รอบต่อนาที 9000']},
+  knock:{title:'ความเสี่ยงน็อค (Detonation Risk)',subtitle:'DETONATION RISK ASSESSMENT',icon:'all icon/detonation_icon.png',desc:'ประเมินความเสี่ยงน็อคจาก CR, ชนิดน้ำมัน และ timing',params:['cr ตัวเลข (กำลังอัด)','ron ตัวเลข (ออกเทน)','timing ตัวเลข (จุดระเบิด) องศา'],examples:['knock cr 12','knock cr 13 ron 91','น็อค กำลังอัด 14 จุดระเบิด 32']},
+  rodratio:{title:'อัตราส่วนก้านสูบ (Rod Ratio)',subtitle:'CONNECTING ROD RATIO',icon:'all icon/Rod Ratio Icon.png',desc:'คำนวณอัตราส่วนก้านสูบ Rod/Stroke และผลต่อแรงกดด้านข้างลูกสูบ',params:['rod(ก้านสูบ) mm','stroke(ระยะชัก) mm'],examples:['rod(ก้านสูบ) 105 stroke(ระยะชัก) 55','rod(ก้านสูบ) 110 stroke(ระยะชัก) 60','ก้านสูบ(rod) 98 ระยะชัก(stroke) 48']},
+  octane:{title:'ค่าออกเทนที่ต้องการ (Octane Requirement)',subtitle:'MINIMUM OCTANE REQUIREMENT',icon:'all icon/Octane Requirement Icon.png',desc:'คำนวณค่าออกเทนขั้นต่ำที่ควรใช้จาก CR และ timing จุดระเบิด',params:['cr ตัวเลข (กำลังอัด)','ron ตัวเลข (ออกเทน ปัจจุบัน)'],examples:['cr 13 ron 91','cr 12','กำลังอัด 11.5 ออกเทน 95']},
+  valvespring:{title:'ความแข็งสปริงวาล์ว (Valve Spring Rate)',subtitle:'VALVE SPRING RATE CALCULATOR',icon:'all icon/valve_spring_icon.png',desc:'คำนวณค่า spring rate ขั้นต่ำสำหรับรอบสูงสุดและ lift ของวาล์ว',params:['rpm ตัวเลข (รอบต่อนาที)','lift ตัวเลข (ระยะยกวาล์ว) mm','mass ตัวเลข (น้ำหนักวาล์ว) g'],examples:['valve spring rpm 10000 lift 9','valve spring rpm 12000 lift 10','สปริงวาล์ว รอบต่อนาที 9000 ระยะยกวาล์ว 8']},
+  pw:{title:'อัตราส่วนกำลังต่อน้ำหนัก (Power/Weight)',subtitle:'POWER TO WEIGHT RATIO',icon:'all icon/PowerWeight Icon.png',desc:'คำนวณ hp/kg จากแรงม้าและน้ำหนักรถรวมผู้ขี่',params:['hp ตัวเลข (แรงม้า)','kg ตัวเลข (น้ำหนักรวม)'],examples:['hp 45 kg 130','hp 80 kg 180','แรงม้า 30 น้ำหนัก 140']},
+  gear:{title:'อัตราทดเกียร์ / สเปรกโซ่ (Gear Ratio)',subtitle:'GEAR & SPROCKET RATIO',icon:'all icon/gear_ratio_icon.png',desc:'คำนวณความเร็วสูงสุดจากสเปรกหน้า-หลัง และรอบเครื่อง',params:['front ตัวเลข (เฟืองหน้า ฟัน)','rear ตัวเลข (เฟืองหลัง ฟัน)','rpm ตัวเลข (รอบต่อนาที)'],examples:['front 14 rear 42 rpm 9000','front 15 rear 40 rpm 8000','เฟืองหน้า 13 เฟืองหลัง 45 รอบต่อนาที 9500']},
+  springrate:{title:'ความแข็งโช้คอัพ (Spring Rate)',subtitle:'SUSPENSION SPRING RATE',icon:'all icon/spring_rate_icon.png',desc:'คำนวณค่าความแข็งสปริง N/mm ที่เหมาะสมจากน้ำหนักและ sag เป้าหมาย',params:['weight(น้ำหนัก) kg','sag(ระยะยุบ) mm'],examples:['spring weight(น้ำหนัก) 70 sag(ระยะยุบ) 30','spring weight(น้ำหนัก) 85 sag(ระยะยุบ) 35']},
+  sag:{title:'ตั้งค่าระยะยุบโช้ค (Sag Setup)',subtitle:'SAG SETUP ADVISOR',icon:'all icon/sag_setup_icon.png',desc:'วิเคราะห์ race sag และ free sag เพื่อแนะนำการปรับโช้ค',params:['free sag ตัวเลข (ยุบอิสระ) mm','race sag ตัวเลข (ยุบขับ) mm'],examples:['free sag 10 race sag 30','free sag 15 race sag 35']},
+  rake:{title:'มุมคอแกน / ระยะเลื่อน (Rake & Trail)',subtitle:'RAKE & TRAIL CALCULATOR',icon:'all icon/rake_trail_icon.png',desc:'คำนวณระยะ Trail จากมุม Rake และขนาดล้อ',params:['rake ตัวเลข (มุมคอแกน) องศา','offset ตัวเลข (ออฟเซ็ต) mm'],examples:['rake 24','rake 25 offset 30','มุมคอแกน 23 ออฟเซ็ต 28']},
+  swingarm:{title:'ความยาวสวิงอาร์ม (Swingarm)',subtitle:'SWINGARM LENGTH EFFECT',icon:'all icon/swingarm_icon.png',desc:'วิเคราะห์ผลของความยาวสวิงอาร์มต่อพฤติกรรมการขับขี่',params:['swingarm ตัวเลข (สวิงอาร์ม) mm'],examples:['swingarm 420','swingarm 450','สวิงอาร์ม 380']},
+  brakebias:{title:'สัดส่วนแรงเบรก (Brake Bias)',subtitle:'FRONT/REAR BRAKE BIAS',icon:'all icon/brake_bias_icon.png',desc:'คำนวณสัดส่วนแรงเบรกหน้า-หลังที่เหมาะสมตามน้ำหนักรถ',params:['weight ตัวเลข (น้ำหนัก) kg','front ตัวเลข (เบรกหน้า) N','rear ตัวเลข (เบรกหลัง) N'],examples:['brake bias weight 130','front 650 rear 350','น้ำหนัก 150 เบรกหน้า 70']},
+  brakedisc:{title:'ขนาดจานเบรก (Brake Disc Size)',subtitle:'BRAKE DISC DIAMETER',icon:'all icon/brake_disc_icon.png',desc:'วิเคราะห์ขนาดจานเบรกและความเหมาะสมกับการใช้งาน',params:['disc ตัวเลข (จานเบรก) mm'],examples:['disc 280','disc 320','จานเบรก 260']},
+  brakingdist:{title:'ระยะเบรกหยุด (Braking Distance)',subtitle:'BRAKING DISTANCE CALCULATOR',icon:'all icon/braking_distance_icon.png',desc:'คำนวณระยะเบรกหยุดจากความเร็วและค่าสัมประสิทธิ์แรงเสียดทาน',params:['speed ตัวเลข (ความเร็ว) km/h','mu ตัวเลข (สัมประสิทธิ์) 0-1'],examples:['speed 100 mu 0.7','speed 120 mu 0.8','ความเร็ว 80 สัมประสิทธิ์ 0.7']},
+  caliper:{title:'ขนาดลูกสูบคาลิปเปอร์ (Caliper)',subtitle:'BRAKE CALIPER PISTON RATIO',icon:'all icon/caliper_icon.png',desc:'คำนวณอัตราส่วน hydraulic advantage ของระบบเบรก',params:['master(แม่ปั๊ม) mm','caliper(คาลิปเปอร์) mm'],examples:['master(แม่ปั๊ม) 14 caliper(คาลิปเปอร์) 32','master(แม่ปั๊ม) 16 caliper(คาลิปเปอร์) 34','แม่ปั๊ม(master) 12.7 คาลิปเปอร์(caliper) 30']},
+  charging:{title:'วิเคราะห์แรงดันชาร์จ (Charging Voltage)',subtitle:'CHARGING SYSTEM ANALYSIS',icon:'all icon/charging_voltage_icon.png',desc:'วิเคราะห์สุขภาพระบบชาร์จจากแรงดันไฟที่วัดได้',params:['volt(แรงดัน) V'],examples:['volt(แรงดัน) 14.2','volt(แรงดัน) 13.5','แรงดัน(volt) 15.1']},
+  stator:{title:'กำลังไฟ Stator Output',subtitle:'STATOR POWER OUTPUT',icon:'all icon/stator_output_icon.png',desc:'ประเมินกำลังวัตต์ของ stator และกระแสสูงสุดที่จ่ายได้',params:['watt ตัวเลข (วัตต์)'],examples:['stator watt 80','stator watt 150','สเตเตอร์ วัตต์ 200']},
+  fuse:{title:'ขนาดฟิวส์ (Fuse Rating)',subtitle:'FUSE SIZE CALCULATOR',icon:'all icon/fuse_icon.png',desc:'คำนวณขนาดแอมป์ฟิวส์ที่เหมาะสมจากกำลังวัตต์ หรือกระแสโหลดของอุปกรณ์',params:['watt(วัตต์) ตัวเลข หรือ amp(กระแส) ตัวเลข','volt(แรงดัน) ตัวเลข (ค่าเริ่มต้น=12V)'],examples:['fuse watt(วัตต์) 60','ฟิวส์ วัตต์(watt) 100 volt(แรงดัน) 12','amp(กระแส) 5 volt(แรงดัน) 12']},
+  cca:{title:'ความสามารถสตาร์ทเย็น (Battery CCA)',subtitle:'COLD CRANKING AMPERES',icon:'all icon/cca_icon.png',desc:'คำนวณ CCA ขั้นต่ำสำหรับสตาร์ทเครื่องในอุณหภูมิต่ำ',params:['cca ตัวเลข','cc ซีซี (ขนาดเครื่อง)','cyl ตัวเลข (สูบ ถ้ามี)'],examples:['cca 150','cca 200 cc 400','แบตเตอรี่ cca 120 250cc']},
+  loadindex:{title:'ดัชนีรับน้ำหนักยาง (Load Index)',subtitle:'TIRE LOAD INDEX',icon:'all icon/load_index_icon.png',desc:'แปลงค่า Load Index เป็นน้ำหนักสูงสุดที่ยางรับได้',params:['li ตัวเลข (ดัชนี)','weight ตัวเลข (น้ำหนัก) kg (ถ้ามี)'],examples:['load index 62','li 58','ดัชนีรับน้ำหนัก 55']},
+  circumference:{title:'เส้นรอบวงยาง (Rolling Circumference)',subtitle:'ROLLING CIRCUMFERENCE',icon:'all icon/circumference_icon.png',desc:'คำนวณเส้นรอบวงและรัศมียางจากขนาดมาตรฐาน',params:['ขนาดยาง เช่น 110/70 R17'],examples:['110/70 r17','120/70 r17','130/70 r17']},
+  speedo:{title:'ความคลาดเคลื่อนมาตรวัด (Speedo Error)',subtitle:'SPEEDOMETER ERROR',icon:'all icon/speedo_error_icon.png',desc:'คำนวณ % ความคลาดเคลื่อนของมาตรวัดเมื่อเปลี่ยนขนาดยาง',params:['orig ขนาดยางเดิม (เดิม)','new ขนาดยางใหม่ (ใหม่)'],examples:['orig เดิม 110/70 r17 new ใหม่ 120/70 r17','เดิม 100/80 r17 ใหม่ 110/80 r17','orig 120/70 r17 new 130/70 r17']},
+  tirepressure:{title:'แรงดันลมยางตามน้ำหนัก (Tire Pressure)',subtitle:'TIRE PRESSURE BY LOAD',icon:'all icon/tire_pressure_icon.png',desc:'แนะนำแรงดันลมยางหน้า-หลังตามน้ำหนักรถและผู้ขี่',params:['weight(น้ำหนักรถ) kg','rider(ผู้ขับ) kg'],examples:['tire pressure weight(น้ำหนักรถ) 150 rider(ผู้ขับ) 70','tire pressure weight(น้ำหนักรถ) 180 rider(ผู้ขับ) 80','น้ำหนักรถ(weight) 130 ผู้ขับ(rider) 65']},
+  rimwidth:{title:'ความกว้างวงล้อที่รองรับ (Rim Width)',subtitle:'RIM WIDTH COMPATIBILITY',icon:'all icon/rim_width_icon.png.png',desc:'ตรวจสอบช่วงความกว้างวงล้อที่รองรับสำหรับยางขนาดที่เลือก',params:['rim ตัวเลข (วงล้อ) นิ้ว','ขนาดยาง (ถ้ามี)'],examples:['rim 3.5','rim 3.0','วงล้อ 2.75']},
+};
+
+/* ══ MODAL ══ */
+function openModal(key){closeModal();const data=modalData[key];if(!data)return;const backdrop=document.createElement('div');backdrop.className='modal-backdrop';backdrop.id='modalBackdrop';backdrop.addEventListener('click',e=>{if(e.target===backdrop)closeModal();});const box=document.createElement('div');box.className='modal-box';const header=document.createElement('div');header.className='modal-header';const titleGroup=document.createElement('div');titleGroup.className='modal-title-group';if(data.icon){const img=document.createElement('img');img.src=data.icon;img.className='modal-icon';img.alt=data.title;img.onerror=()=>img.style.display='none';titleGroup.appendChild(img);}const titleWrap=document.createElement('div');const titleEl=document.createElement('div');titleEl.className='modal-title';titleEl.textContent=data.title;const subtitleEl=document.createElement('div');subtitleEl.className='modal-subtitle';subtitleEl.textContent='◈ '+data.subtitle;titleWrap.appendChild(titleEl);titleWrap.appendChild(subtitleEl);titleGroup.appendChild(titleWrap);const closeBtn=document.createElement('button');closeBtn.className='modal-close';closeBtn.textContent='×';closeBtn.onclick=closeModal;header.appendChild(titleGroup);header.appendChild(closeBtn);box.appendChild(header);const body=document.createElement('div');body.className='modal-body';if(data.desc){const descBlock=document.createElement('div');descBlock.className='modal-desc';const descP=document.createElement('p');descP.textContent=data.desc;descBlock.appendChild(descP);body.appendChild(descBlock);}if(data.params&&data.params.length){const paramTitle=document.createElement('div');paramTitle.className='modal-section-title';paramTitle.textContent='◈ ค่าที่ระบุได้';body.appendChild(paramTitle);const paramWrap=document.createElement('div');paramWrap.className='modal-params';data.params.forEach(p=>{const badge=document.createElement('span');badge.className='modal-param';badge.textContent=p;paramWrap.appendChild(badge);});body.appendChild(paramWrap);}if(data.examples&&data.examples.length){const exTitle=document.createElement('div');exTitle.className='modal-section-title';exTitle.textContent='◈ ตัวอย่าง — กดส่งได้ทันที';body.appendChild(exTitle);const exWrap=document.createElement('div');exWrap.className='modal-examples';data.examples.forEach(ex=>{const btn=document.createElement('button');btn.className='modal-example-btn';const icon=document.createElement('span');icon.className='modal-example-icon';icon.textContent='▶';const text=document.createElement('span');text.className='modal-example-text';text.textContent=ex;const sendLabel=document.createElement('span');sendLabel.className='modal-example-send';sendLabel.textContent='ส่งทันที →';btn.appendChild(icon);btn.appendChild(text);btn.appendChild(sendLabel);btn.onclick=()=>{closeModal();input.value=ex;updateCharCount(input);setTimeout(()=>sendMessage(),80);};exWrap.appendChild(btn);});body.appendChild(exWrap);}const footer=document.createElement('div');footer.className='modal-footer';const modalInput=document.createElement('input');modalInput.type='text';modalInput.className='modal-input';modalInput.placeholder='พิมพ์ค่าเอง หรือเลือกตัวอย่างด้านบน...';modalInput.maxLength=300;modalInput.addEventListener('keypress',e=>{if(e.key==='Enter')sendFromModal(modalInput.value);});const modalSendBtn=document.createElement('button');modalSendBtn.className='modal-send-btn';modalSendBtn.textContent='SEND →';modalSendBtn.onclick=()=>sendFromModal(modalInput.value);footer.appendChild(modalInput);footer.appendChild(modalSendBtn);body.appendChild(footer);box.appendChild(body);backdrop.appendChild(box);document.body.appendChild(backdrop);setTimeout(()=>modalInput.focus(),200);document.addEventListener('keydown',onModalKeyDown);}
+function sendFromModal(text){const t=(text||'').trim();if(!t)return;closeModal();input.value=t;updateCharCount(input);setTimeout(()=>sendMessage(),80);}
+function closeModal(){const el=document.getElementById('modalBackdrop');if(el)el.remove();document.removeEventListener('keydown',onModalKeyDown);}
+function onModalKeyDown(e){if(e.key==='Escape')closeModal();}
 </script>
 </body>
 </html>
