@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
 <title>AI API TECH T0.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Sarabun:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Sarabun:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root {
   --orange: #ff6a00;
@@ -439,6 +439,163 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
   .token-panel { left: 0; right: 0; width: 100%; border-radius: 0 0 12px 12px; top: 52px; }
   .token-badge { font-size: 0.55rem; padding: 2px 4px; }
 }
+
+
+/* ════════════════════════════════════════════════════
+   CATEGORY SECTIONS — หมวดหมู่ + heading คั่น
+   ════════════════════════════════════════════════════ */
+.cat-section {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  animation: fadeUp 0.5s ease both;
+}
+.cat-section + .cat-section { margin-top: 24px; }
+
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 4px 14px;
+  padding: 12px 0 10px;
+  border-top: 1px solid rgba(255,106,0,0.15);
+  position: relative;
+}
+.cat-section:first-of-type .cat-header {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+.cat-header::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 0;
+  width: 80px; height: 2px;
+  background: linear-gradient(90deg, var(--orange), transparent);
+}
+.cat-section:first-of-type .cat-header::before { display: none; }
+
+.cat-num {
+  font-family: 'Orbitron', var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 5px 10px;
+  border: 1px solid var(--border-bright);
+  border-radius: 4px;
+  background: rgba(255,106,0,0.1);
+  color: var(--orange);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.cat-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.cat-title-th {
+  font-family: 'Orbitron', var(--font-head);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  /* ─── GRADIENT TEXT ─── */
+  background: linear-gradient(90deg, #ffd9b5 0%, #ff6a00 45%, #ffffff 90%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: shift 5s linear infinite;
+  line-height: 1.1;
+}
+.cat-title-th.blue {
+  background: linear-gradient(90deg, #b6cdff 0%, #00aaff 45%, #ffffff 90%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shift 5s linear infinite;
+}
+.cat-title-th.red {
+  background: linear-gradient(90deg, #ffb6b6 0%, #ff3333 45%, #ffffff 90%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shift 5s linear infinite;
+}
+.cat-title-th.green {
+  background: linear-gradient(90deg, #b9f1c8 0%, #00ff88 45%, #ffffff 90%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shift 5s linear infinite;
+}
+
+.cat-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.cat-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255,106,0,0.3) 0%, transparent 100%);
+  min-width: 16px;
+  opacity: 0.6;
+}
+
+.cat-count {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 1.5px;
+  padding: 3px 8px;
+  border: 1px solid rgba(255,106,0,0.2);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+@keyframes shift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* welcome-title ก็ไล่สีด้วย */
+.welcome-title {
+  background: linear-gradient(90deg, #f0f0f0 0%, #ff9f45 40%, #ff6a00 60%, #f0f0f0 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shift 5s linear infinite;
+}
+.welcome-title span {
+  background: linear-gradient(90deg, #ff6a00, #ffd66e, #ff6a00);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shift 3s linear infinite;
+}
+
+@media (max-width: 600px) {
+  .cat-header { gap: 8px; padding: 10px 0 8px; margin: 6px 4px 10px; }
+  .cat-num { font-size: 0.62rem; padding: 4px 7px; }
+  .cat-title-th { font-size: 0.85rem; letter-spacing: 0.5px; }
+  .cat-subtitle { font-size: 0.55rem; letter-spacing: 0.5px; }
+  .cat-count { font-size: 0.52rem; padding: 2px 5px; }
+}
+
 </style>
 </head>
 <body>
@@ -566,50 +723,173 @@ header { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(
       </div>
       <div class="welcome-title">AI API <span>TECH</span> T0.1</div>
       <div class="welcome-sub">ระบบวิเคราะห์และคำนวณเครื่องยนต์อัจฉริยะ</div>
-      <div class="quick-grid">
-        <button class="quick-btn" onclick="openModal('obd')"><img src="obd_icon.png" alt="OBD ECU" style="height:8em;vertical-align:middle;margin-right:15px;">รหัสความผิดปกติ OBD / ECU</button>
-        <button class="quick-btn" onclick="openModal('cc')"><img src="Untitled design.png" alt="CC" style="height:8em;vertical-align:middle;margin-right:15px;">คำนวณ CC / รูลูกสูบ / ระยะชัก</button>
-        <button class="quick-btn" onclick="openModal('afr')"><img src="AF_icon.png" alt="AFR" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนอากาศต่อเชื้อเพลิง (AFR)</button>
-        <button class="quick-btn" onclick="openModal('staticcr')"><img src="static_cr_icon.png" alt="Static CR" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนกำลังอัดสถิต (Static CR)</button>
-        <button class="quick-btn" onclick="openModal('pistonspeed')"><img src="piston_speed_icon.png" alt="Piston Speed" style="height:8em;vertical-align:middle;margin-right:5px;">ความเร็วลูกสูบเฉลี่ย + ปริมาณอากาศ</button>
-        <button class="quick-btn" onclick="openModal('compression')"><img src="cressioompn_pressure_icon.png" alt="Compression" style="height:8em;vertical-align:middle;margin-right:5px;">แรงดันตอนอัด / แรงดันตอนระเบิด</button>
-        <button class="quick-btn" onclick="openModal('dynamiccr')"><img src="Dynamic CR Icon.png" alt="Dynamic CR" style="height:8em;vertical-align:middle;margin-right:5px;">กำลังอัดพลวัต (Dynamic CR)</button>
-        <button class="quick-btn" onclick="openModal('maintenance')"><img src="Maintenance Schedule Icon.png" alt="Maintenance" style="height:8em;vertical-align:middle;margin-right:5px;">ตารางเช็คระยะ / บำรุงรักษา</button>
-        <button class="quick-btn" onclick="openModal('ve')"><img src="VE Icon.png" alt="VE" style="height:8em;vertical-align:middle;margin-right:5px;">ประสิทธิภาพการอัดอากาศ (VE%)</button>
-        <button class="quick-btn" onclick="openModal('injector')"><img src="Injector Sizing Icon.png" alt="Injector" style="height:8em;vertical-align:middle;margin-right:5px;">คำนวณขนาดหัวฉีด (Injector Sizing)</button>
-        <button class="quick-btn" onclick="openModal('jet')"><img src="Carburetor Jet Size Icon.png" alt="Jet" style="height:8em;vertical-align:middle;margin-right:5px;">คำนวณเมนเจ็ตคาร์บูเรเตอร์</button>
-        <button class="quick-btn" onclick="openModal('ignition')"><img src="Ignition Timing.png" alt="Ignition" style="height:8em;vertical-align:middle;margin-right:5px;">องศาจุดระเบิด (Ignition Timing)</button>
-        <button class="quick-btn" onclick="openModal('throttle')"><img src="throttle_body_icon.png" alt="Throttle" style="height:8em;vertical-align:middle;margin-right:5px;">ขนาดลิ้นเร่ง (Throttle Body Size)</button>
-        <button class="quick-btn" onclick="openModal('hptorque')"><img src="hp_torque_icon.png" alt="HP Torque" style="height:8em;vertical-align:middle;margin-right:5px;">ประเมินแรงม้า / แรงบิด (HP / Torque)</button>
-        <button class="quick-btn" onclick="openModal('exhaust')"><img src="exhaust_icon.png" alt="Exhaust" style="height:8em;vertical-align:middle;margin-right:5px;">ขนาดท่อไอเสีย (Exhaust Header)</button>
-        <button class="quick-btn" onclick="openModal('intake')"><img src="Exhaust Icon.png" alt="Intake" style="height:8em;vertical-align:middle;margin-right:5px;">ความยาวท่อไอดี (Intake Runner)</button>
-        <button class="quick-btn" onclick="openModal('lsa')"><img src="valve_timing_icon.png" alt="LSA" style="height:8em;vertical-align:middle;margin-right:5px;">มุมแยกแคมชาฟต์ (Valve Timing LSA)</button>
-        <button class="quick-btn" onclick="openModal('coolant')"><img src="Coolant Icon.png" alt="Coolant" style="height:8em;vertical-align:middle;margin-right:5px;">ระบบหล่อเย็น (Coolant Flow Rate)</button>
-        <button class="quick-btn" onclick="openModal('oil')"><img src="oil_icon.png" alt="Oil" style="height:8em;vertical-align:middle;margin-right:5px;">เลือกเกรดน้ำมันเครื่อง (Oil Viscosity)</button>
-        <button class="quick-btn" onclick="openModal('knock')"><img src="detonation_icon.png" alt="Knock" style="height:8em;vertical-align:middle;margin-right:5px;">ความเสี่ยงน็อค (Detonation Risk)</button>
-        <button class="quick-btn" onclick="openModal('rodratio')"><img src="Rod Ratio Icon.png" alt="Rod Ratio" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนก้านสูบ (Rod Ratio)</button>
-        <button class="quick-btn" onclick="openModal('octane')"><img src="Octane Requirement Icon.png" alt="Octane" style="height:8em;vertical-align:middle;margin-right:5px;">ค่าออกเทนที่ต้องการ (Octane Requirement)</button>
-        <button class="quick-btn" onclick="openModal('valvespring')"><img src="valve_spring_icon.png" alt="Valve Spring" style="height:8em;vertical-align:middle;margin-right:5px;">ความแข็งสปริงวาล์ว (Valve Spring Rate)</button>
-        <button class="quick-btn" onclick="openModal('pw')"><img src="PowerWeight Icon.png" alt="Power/Weight" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนกำลังต่อน้ำหนัก (Power/Weight)</button>
-        <button class="quick-btn" onclick="openModal('gear')"><img src="gear_ratio_icon.png" alt="Gear Ratio" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราทดเกียร์ / สเปรกโซ่ (Gear Ratio)</button>
-        <button class="quick-btn" onclick="openModal('springrate')"><img src="spring_rate_icon.png" alt="Spring Rate" style="height:8em;vertical-align:middle;margin-right:5px;">ความแข็งโช้คอัพ (Spring Rate)</button>
-        <button class="quick-btn" onclick="openModal('sag')"><img src="sag_setup_icon.png" alt="Sag Setup" style="height:8em;vertical-align:middle;margin-right:5px;">ตั้งค่าระยะยุบโช้ค (Sag Setup)</button>
-        <button class="quick-btn" onclick="openModal('rake')"><img src="rake_trail_icon.png" alt="Rake Trail" style="height:8em;vertical-align:middle;margin-right:5px;">มุมคอแกน / ระยะเลื่อน (Rake &amp; Trail)</button>
-        <button class="quick-btn" onclick="openModal('swingarm')"><img src="swingarm_icon.png" alt="Swingarm" style="height:7em;vertical-align:middle;margin-right:5px;">ความยาวสวิงอาร์ม (Swingarm)</button>
-        <button class="quick-btn" onclick="openModal('brakebias')"><img src="brake_bias_icon.png" alt="Brake Bias" style="height:6em;vertical-align:middle;margin-right:5px;">สัดส่วนแรงเบรก (Brake Bias)</button>
-        <button class="quick-btn" onclick="openModal('brakedisc')"><img src="brake_disc_icon.png" alt="Brake Disc" style="height:7em;vertical-align:middle;margin-right:5px;">ขนาดจานเบรก (Brake Disc Size)</button>
-        <button class="quick-btn" onclick="openModal('brakingdist')"><img src="braking_distance_icon.png" alt="Braking Distance" style="height:7em;vertical-align:middle;margin-right:5px;">ระยะเบรกหยุด (Braking Distance)</button>
-        <button class="quick-btn" onclick="openModal('caliper')"><img src="caliper_icon.png" alt="Caliper" style="height:7em;vertical-align:middle;margin-right:5px;">ขนาดลูกสูบคาลิปเปอร์ (Caliper)</button>
-        <button class="quick-btn" onclick="openModal('charging')"><img src="charging_voltage_icon.png" alt="Charging Voltage" style="height:7em;vertical-align:middle;margin-right:5px;">วิเคราะห์แรงดันชาร์จ (Charging Voltage)</button>
-        <button class="quick-btn" onclick="openModal('stator')"><img src="stator_output_icon.png" alt="Stator" style="height:7em;vertical-align:middle;margin-right:5px;">กำลังไฟ Stator Output</button>
-        <button class="quick-btn" onclick="openModal('fuse')"><img src="fuse_icon.png" alt="Fuse" style="height:7em;vertical-align:middle;margin-right:5px;">ขนาดฟิวส์ (Fuse Rating)</button>
-        <button class="quick-btn" onclick="openModal('cca')"><img src="cca_icon.png" alt="CCA" style="height:7em;vertical-align:middle;margin-right:5px;">ความสามารถสตาร์ทเย็น (Battery CCA)</button>
-        <button class="quick-btn" onclick="openModal('loadindex')"><img src="load_index_icon.png" alt="Load Index" style="height:7em;vertical-align:middle;margin-right:5px;">ดัชนีรับน้ำหนักยาง (Load Index)</button>
-        <button class="quick-btn" onclick="openModal('circumference')"><img src="circumference_icon.png" alt="Circumference" style="height:7em;vertical-align:middle;margin-right:5px;">เส้นรอบวงยาง (Rolling Circumference)</button>
-        <button class="quick-btn" onclick="openModal('speedo')"><img src="speedo_error_icon.png" alt="Speedo Error" style="height:7em;vertical-align:middle;margin-right:5px;">ความคลาดเคลื่อนมาตรวัด (Speedo Error)</button>
-        <button class="quick-btn" onclick="openModal('tirepressure')"><img src="tire_pressure_icon.png" alt="Tire Pressure" style="height:7em;vertical-align:middle;margin-right:5px;">แรงดันลมยางตามน้ำหนัก (Tire Pressure)</button>
-        <button class="quick-btn" onclick="openModal('rimwidth')"><img src="rim_width_icon.png.png" alt="Rim Width" style="height:7em;vertical-align:middle;margin-right:5px;">ความกว้างวงล้อที่รองรับ (Rim Width)</button>
-      </div>
+      <section class="cat-section">
+        <div class="cat-header">
+          <div class="cat-num">01</div>
+          <div class="cat-titles">
+            <div class="cat-title-th blue">DIAGNOSTICS</div>
+            <div class="cat-subtitle">วินิจฉัยรหัสผิดปกติจาก ECU</div>
+          </div>
+          <div class="cat-line"></div>
+          <div class="cat-count">1 TOOLS</div>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="openModal('obd')"><img src=" obd_icon.png" alt="OBD ECU" style="height:8em;vertical-align:middle;margin-right:15px;">รหัสความผิดปกติ OBD / ECU</button>
+        </div>
+      </section>
+
+      <section class="cat-section">
+        <div class="cat-header">
+          <div class="cat-num">02</div>
+          <div class="cat-titles">
+            <div class="cat-title-th">ENGINE INTERNALS</div>
+            <div class="cat-subtitle">เครื่องยนต์ภายใน · ลูกสูบ · ก้านสูบ · วาล์ว</div>
+          </div>
+          <div class="cat-line"></div>
+          <div class="cat-count">8 TOOLS</div>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="openModal('cc')"><img src=" Untitled design.png" alt="CC" style="height:8em;vertical-align:middle;margin-right:15px;">คำนวณ CC / รูลูกสูบ / ระยะชัก</button>
+          <button class="quick-btn" onclick="openModal('staticcr')"><img src="static_cr_icon.png" alt="Static CR" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนกำลังอัดสถิต (Static CR)</button>
+          <button class="quick-btn" onclick="openModal('dynamiccr')"><img src="Dynamic CR Icon.png" alt="Dynamic CR" style="height:8em;vertical-align:middle;margin-right:5px;">กำลังอัดพลวัต (Dynamic CR)</button>
+          <button class="quick-btn" onclick="openModal('pistonspeed')"><img src="piston_speed_icon.png" alt="Piston Speed" style="height:8em;vertical-align:middle;margin-right:5px;">ความเร็วลูกสูบเฉลี่ย + ปริมาณอากาศ</button>
+          <button class="quick-btn" onclick="openModal('compression')"><img src="cressioompn_pressure_icon.png" alt="Compression" style="height:8em;vertical-align:middle;margin-right:5px;">แรงดันตอนอัด / แรงดันตอนระเบิด</button>
+          <button class="quick-btn" onclick="openModal('rodratio')"><img src="Rod Ratio Icon.png" alt="Rod Ratio" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนก้านสูบ (Rod Ratio)</button>
+          <button class="quick-btn" onclick="openModal('valvespring')"><img src="valve_spring_icon.png" alt="Valve Spring" style="height:8em;vertical-align:middle;margin-right:5px;">ความแข็งสปริงวาล์ว (Valve Spring Rate)</button>
+          <button class="quick-btn" onclick="openModal('lsa')"><img src="valve_timing_icon.png" alt="LSA" style="height:8em;vertical-align:middle;margin-right:5px;">มุมแยกแคมชาฟต์ (Valve Timing LSA)</button>
+        </div>
+      </section>
+
+      <section class="cat-section">
+        <div class="cat-header">
+          <div class="cat-num">03</div>
+          <div class="cat-titles">
+            <div class="cat-title-th">FUEL · INTAKE · EXHAUST</div>
+            <div class="cat-subtitle">เชื้อเพลิง · ระบบอากาศ · ไอดี-ไอเสีย</div>
+          </div>
+          <div class="cat-line"></div>
+          <div class="cat-count">7 TOOLS</div>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="openModal('afr')"><img src="AF_icon.png" alt="AFR" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนอากาศต่อเชื้อเพลิง (AFR)</button>
+          <button class="quick-btn" onclick="openModal('ve')"><img src="VE Icon.png" alt="VE" style="height:8em;vertical-align:middle;margin-right:5px;">ประสิทธิภาพการอัดอากาศ (VE%)</button>
+          <button class="quick-btn" onclick="openModal('injector')"><img src="Injector Sizing Icon.png" alt="Injector" style="height:8em;vertical-align:middle;margin-right:5px;">คำนวณขนาดหัวฉีด (Injector Sizing)</button>
+          <button class="quick-btn" onclick="openModal('jet')"><img src="Carburetor Jet Size Icon.png" alt="Jet" style="height:8em;vertical-align:middle;margin-right:5px;">คำนวณเมนเจ็ตคาร์บูเรเตอร์</button>
+          <button class="quick-btn" onclick="openModal('throttle')"><img src="throttle_body_icon.png" alt="Throttle" style="height:8em;vertical-align:middle;margin-right:5px;">ขนาดลิ้นเร่ง (Throttle Body Size)</button>
+          <button class="quick-btn" onclick="openModal('intake')"><img src="Exhaust Icon.png" alt="Intake" style="height:8em;vertical-align:middle;margin-right:5px;">ความยาวท่อไอดี (Intake Runner)</button>
+          <button class="quick-btn" onclick="openModal('exhaust')"><img src="exhaust_icon.png" alt="Exhaust" style="height:8em;vertical-align:middle;margin-right:5px;">ขนาดท่อไอเสีย (Exhaust Header)</button>
+        </div>
+      </section>
+
+      <section class="cat-section">
+        <div class="cat-header">
+          <div class="cat-num">04</div>
+          <div class="cat-titles">
+            <div class="cat-title-th red">IGNITION &amp; PERFORMANCE</div>
+            <div class="cat-subtitle">จุดระเบิด · ออกเทน · สมรรถนะ</div>
+          </div>
+          <div class="cat-line"></div>
+          <div class="cat-count">5 TOOLS</div>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="openModal('ignition')"><img src="Ignition Timing.png" alt="Ignition" style="height:8em;vertical-align:middle;margin-right:5px;">องศาจุดระเบิด (Ignition Timing)</button>
+          <button class="quick-btn" onclick="openModal('octane')"><img src="Octane Requirement Icon.png" alt="Octane" style="height:8em;vertical-align:middle;margin-right:5px;">ค่าออกเทนที่ต้องการ (Octane Requirement)</button>
+          <button class="quick-btn" onclick="openModal('knock')"><img src="detonation_icon.png" alt="Knock" style="height:8em;vertical-align:middle;margin-right:5px;">ความเสี่ยงน็อค (Detonation Risk)</button>
+          <button class="quick-btn" onclick="openModal('hptorque')"><img src="hp_torque_icon.png" alt="HP Torque" style="height:8em;vertical-align:middle;margin-right:5px;">ประเมินแรงม้า / แรงบิด (HP / Torque)</button>
+          <button class="quick-btn" onclick="openModal('pw')"><img src="PowerWeight Icon.png" alt="Power/Weight" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราส่วนกำลังต่อน้ำหนัก (Power/Weight)</button>
+        </div>
+      </section>
+
+      <section class="cat-section">
+        <div class="cat-header">
+          <div class="cat-num">05</div>
+          <div class="cat-titles">
+            <div class="cat-title-th green">COOLING · LUBE · SERVICE</div>
+            <div class="cat-subtitle">หล่อเย็น · น้ำมันเครื่อง · บำรุงรักษา</div>
+          </div>
+          <div class="cat-line"></div>
+          <div class="cat-count">3 TOOLS</div>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="openModal('coolant')"><img src="Coolant Icon.png" alt="Coolant" style="height:8em;vertical-align:middle;margin-right:5px;">ระบบหล่อเย็น (Coolant Flow Rate)</button>
+          <button class="quick-btn" onclick="openModal('oil')"><img src="oil_icon.png" alt="Oil" style="height:8em;vertical-align:middle;margin-right:5px;">เลือกเกรดน้ำมันเครื่อง (Oil Viscosity)</button>
+          <button class="quick-btn" onclick="openModal('maintenance')"><img src="Maintenance Schedule Icon.png" alt="Maintenance" style="height:8em;vertical-align:middle;margin-right:5px;">ตารางเช็คระยะ / บำรุงรักษา</button>
+        </div>
+      </section>
+
+      <section class="cat-section">
+        <div class="cat-header">
+          <div class="cat-num">06</div>
+          <div class="cat-titles">
+            <div class="cat-title-th">DRIVETRAIN &amp; SUSPENSION</div>
+            <div class="cat-subtitle">ส่งกำลัง · ช่วงล่าง · เฟรม</div>
+          </div>
+          <div class="cat-line"></div>
+          <div class="cat-count">5 TOOLS</div>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="openModal('gear')"><img src="gear_ratio_icon.png" alt="Gear Ratio" style="height:8em;vertical-align:middle;margin-right:5px;">อัตราทดเกียร์ / สเปรกโซ่ (Gear Ratio)</button>
+          <button class="quick-btn" onclick="openModal('springrate')"><img src="spring_rate_icon.png" alt="Spring Rate" style="height:8em;vertical-align:middle;margin-right:5px;">ความแข็งโช้คอัพ (Spring Rate)</button>
+          <button class="quick-btn" onclick="openModal('sag')"><img src="sag_setup_icon.png" alt="Sag Setup" style="height:8em;vertical-align:middle;margin-right:5px;">ตั้งค่าระยะยุบโช้ค (Sag Setup)</button>
+          <button class="quick-btn" onclick="openModal('rake')"><img src="rake_trail_icon.png" alt="Rake Trail" style="height:8em;vertical-align:middle;margin-right:5px;">มุมคอแกน / ระยะเลื่อน (Rake &amp; Trail)</button>
+          <button class="quick-btn" onclick="openModal('swingarm')"><img src="swingarm_icon.png" alt="Swingarm" style="height:7em;vertical-align:middle;margin-right:5px;">ความยาวสวิงอาร์ม (Swingarm)</button>
+        </div>
+      </section>
+
+      <section class="cat-section">
+        <div class="cat-header">
+          <div class="cat-num">07</div>
+          <div class="cat-titles">
+            <div class="cat-title-th red">BRAKES</div>
+            <div class="cat-subtitle">ระบบเบรก · จานเบรก · คาลิปเปอร์</div>
+          </div>
+          <div class="cat-line"></div>
+          <div class="cat-count">4 TOOLS</div>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="openModal('brakebias')"><img src="brake_bias_icon.png" alt="Brake Bias" style="height:6em;vertical-align:middle;margin-right:5px;">สัดส่วนแรงเบรก (Brake Bias)</button>
+          <button class="quick-btn" onclick="openModal('brakedisc')"><img src="brake_disc_icon.png" alt="Brake Disc" style="height:7em;vertical-align:middle;margin-right:5px;">ขนาดจานเบรก (Brake Disc Size)</button>
+          <button class="quick-btn" onclick="openModal('brakingdist')"><img src="braking_distance_icon.png" alt="Braking Distance" style="height:7em;vertical-align:middle;margin-right:5px;">ระยะเบรกหยุด (Braking Distance)</button>
+          <button class="quick-btn" onclick="openModal('caliper')"><img src="caliper_icon.png" alt="Caliper" style="height:7em;vertical-align:middle;margin-right:5px;">ขนาดลูกสูบคาลิปเปอร์ (Caliper)</button>
+        </div>
+      </section>
+
+      <section class="cat-section">
+        <div class="cat-header">
+          <div class="cat-num">08</div>
+          <div class="cat-titles">
+            <div class="cat-title-th blue">ELECTRICAL</div>
+            <div class="cat-subtitle">ระบบไฟฟ้า · ชาร์จ · แบตเตอรี่</div>
+          </div>
+          <div class="cat-line"></div>
+          <div class="cat-count">4 TOOLS</div>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="openModal('charging')"><img src="charging_voltage_icon.png" alt="Charging Voltage" style="height:7em;vertical-align:middle;margin-right:5px;">วิเคราะห์แรงดันชาร์จ (Charging Voltage)</button>
+          <button class="quick-btn" onclick="openModal('stator')"><img src="stator_output_icon.png" alt="Stator" style="height:7em;vertical-align:middle;margin-right:5px;">กำลังไฟ Stator Output</button>
+          <button class="quick-btn" onclick="openModal('fuse')"><img src="fuse_icon.png" alt="Fuse" style="height:7em;vertical-align:middle;margin-right:5px;">ขนาดฟิวส์ (Fuse Rating)</button>
+          <button class="quick-btn" onclick="openModal('cca')"><img src="cca_icon.png" alt="CCA" style="height:7em;vertical-align:middle;margin-right:5px;">ความสามารถสตาร์ทเย็น (Battery CCA)</button>
+        </div>
+      </section>
+
+      <section class="cat-section">
+        <div class="cat-header">
+          <div class="cat-num">09</div>
+          <div class="cat-titles">
+            <div class="cat-title-th">WHEELS &amp; TIRES</div>
+            <div class="cat-subtitle">วงล้อ · ยาง · มาตรวัด</div>
+          </div>
+          <div class="cat-line"></div>
+          <div class="cat-count">5 TOOLS</div>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="openModal('loadindex')"><img src="load_index_icon.png" alt="Load Index" style="height:7em;vertical-align:middle;margin-right:5px;">ดัชนีรับน้ำหนักยาง (Load Index)</button>
+          <button class="quick-btn" onclick="openModal('circumference')"><img src="circumference_icon.png" alt="Circumference" style="height:7em;vertical-align:middle;margin-right:5px;">เส้นรอบวงยาง (Rolling Circumference)</button>
+          <button class="quick-btn" onclick="openModal('speedo')"><img src="speedo_error_icon.png" alt="Speedo Error" style="height:7em;vertical-align:middle;margin-right:5px;">ความคลาดเคลื่อนมาตรวัด (Speedo Error)</button>
+          <button class="quick-btn" onclick="openModal('tirepressure')"><img src="tire_pressure_icon.png" alt="Tire Pressure" style="height:7em;vertical-align:middle;margin-right:5px;">แรงดันลมยางตามน้ำหนัก (Tire Pressure)</button>
+          <button class="quick-btn" onclick="openModal('rimwidth')"><img src="rim_width_icon.png.png" alt="Rim Width" style="height:7em;vertical-align:middle;margin-right:5px;">ความกว้างวงล้อที่รองรับ (Rim Width)</button>
+        </div>
+      </section>
     </div>
   </div>
 
